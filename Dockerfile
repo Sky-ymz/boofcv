@@ -1,17 +1,23 @@
 FROM --platform=linux/arm64 debian:bookworm-slim
 
 # Install GraalVM JDK + native-image deps for aarch64
-RUN apt-get update && apt-get install -y --no-install-recommends \
-        ca-certificates curl wget xz-utils \
+# Use || true to make apt resilient under QEMU emulation (slow downloads sometimes fail)
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        ca-certificates curl xz-utils \
         build-essential zlib1g-dev musl-tools \
-    && rm -rf /var/lib/apt/lists/*
+        git \
+    && rm -rf /var/lib/apt/lists/* \
+    && which curl && curl --version | head -1
 
-# Install GraalVM CE 21 aarch64
+# Install GraalVM CE 21 aarch64 (use curl instead of wget for reliability)
 ARG GRAAL_VERSION=21.0.2
 ARG GRAAL_DIR=graalvm-jdk-${GRAAL_VERSION}+13.1
 ARG GRAAL_TARBALL=graalvm-community-jdk-${GRAAL_VERSION}_linux-aarch64_bin.tar.gz
 WORKDIR /opt
-RUN wget -q "https://github.com/graalvm/graalvm-ce-builds/releases/download/jdk-${GRAAL_VERSION}/${GRAAL_TARBALL}" \
+RUN curl -fsSL -o ${GRAAL_TARBALL} \
+        "https://github.com/graalvm/graalvm-ce-builds/releases/download/jdk-${GRAAL_VERSION}/${GRAAL_TARBALL}" \
+    && ls -lh ${GRAAL_TARBALL} \
     && tar xzf ${GRAAL_TARBALL} \
     && rm ${GRAAL_TARBALL} \
     && /opt/${GRAAL_DIR}/bin/gu install native-image
