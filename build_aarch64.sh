@@ -22,7 +22,7 @@ if [ ! -x "$NATIVE_IMAGE" ]; then
 fi
 
 OUTPUT_NAME="${OUTPUT_NAME:-boofcv_qr_cli_arm64}"
-LIBC_MODE="${LIBC_MODE:-musl}"   # 鸿蒙 PC 用 musl；纯 Linux aarch64 可改 glibc
+LIBC_MODE="${LIBC_MODE:-glibc}"   # 鸿蒙 PC 标准系统用 GNU libc，不是 musl
 
 # ----- 依赖检查 ---------------------------------------------------------------
 if [ ! -d classpath_exploded ]; then

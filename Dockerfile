@@ -7,8 +7,11 @@ RUN apt-get update \
         ca-certificates curl xz-utils \
         build-essential zlib1g-dev musl-tools \
         git \
+        gcc-aarch64-linux-gnu g++-aarch64-linux-gnu \
+        musl-tools musl-dev \
     && rm -rf /var/lib/apt/lists/* \
-    && which curl && curl --version | head -1
+    && which curl && curl --version | head -1 \
+    && which aarch64-linux-gnu-gcc && aarch64-linux-gnu-gcc --version | head -1
 
 # Install GraalVM CE 21 aarch64 — use pre-downloaded tarball from build context
 # (downloaded on x86_64 host first, much faster than under QEMU emulation)
