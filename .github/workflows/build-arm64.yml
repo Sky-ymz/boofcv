@@ -25,13 +25,30 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      # Pre-download GraalVM tarball on host (x86_64, fast)
+      # then COPY it into the ARM container — avoids slow download under QEMU
+      - name: Pre-download GraalVM on host
+        run: |
+          mkdir -p /tmp/graalvm-prebuilt
+          cd /tmp/graalvm-prebuilt
+          if [ ! -f graalvm-community-jdk-21.0.2_linux-aarch64_bin.tar.gz ]; then
+            echo "Downloading GraalVM..."
+            curl -fL -o graalvm-community-jdk-21.0.2_linux-aarch64_bin.tar.gz \
+              "https://github.com/graalvm/graalvm-ce-builds/releases/download/jdk-21.0.2/graalvm-community-jdk-21.0.2_linux-aarch64_bin.tar.gz"
+          fi
+          ls -lh /tmp/graalvm-prebuilt/
+
       - name: Build aarch64 binary in ARM container
         run: |
+          # Copy pre-downloaded GraalVM into build context so Dockerfile can COPY it
+          cp /tmp/graalvm-prebuilt/graalvm-community-jdk-21.0.2_linux-aarch64_bin.tar.gz .
           docker buildx build \
             --platform linux/arm64 \
             --load \
             --build-arg OUTPUT_NAME=boofcv_qr_cli_arm64 \
             -t boofcv-arm64 .
+          # cleanup
+          rm -f graalvm-community-jdk-21.0.2_linux-aarch64_bin.tar.gz
 
       - name: Extract binary from container
         run: |

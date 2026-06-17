@@ -10,28 +10,20 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/* \
     && which curl && curl --version | head -1
 
-# Install GraalVM CE 21 aarch64 (use curl instead of wget for reliability)
+# Install GraalVM CE 21 aarch64 — use pre-downloaded tarball from build context
+# (downloaded on x86_64 host first, much faster than under QEMU emulation)
 ARG GRAAL_VERSION=21.0.2
 ARG GRAAL_DIR=graalvm-jdk-${GRAAL_VERSION}+13.1
 ARG GRAAL_TARBALL=graalvm-community-jdk-${GRAAL_VERSION}_linux-aarch64_bin.tar.gz
 WORKDIR /opt
-
-# Step-by-step with diagnostic prints to identify which step fails
-RUN echo "=== STEP 1: which tools ===" \
-    && which curl || echo "curl NOT FOUND" \
-    && which tar || echo "tar NOT FOUND" \
-    && which xz || echo "xz NOT FOUND" \
-    && echo "=== STEP 2: download ===" \
-    && curl -fL -o ${GRAAL_TARBALL} \
-        "https://github.com/graalvm/graalvm-ce-builds/releases/download/jdk-${GRAAL_VERSION}/${GRAAL_TARBALL}" || echo "DOWNLOAD FAILED exit=$?" \
-    && ls -lh ${GRAAL_TARBALL} || echo "LIST FAILED" \
-    && echo "=== STEP 3: extract ===" \
-    && tar xzf ${GRAAL_TARBALL} || echo "EXTRACT FAILED" \
-    && rm ${GRAAL_TARBALL} \
-    && ls /opt/${GRAAL_DIR}/bin/ 2>&1 | head -5 \
-    && echo "=== STEP 4: install native-image ===" \
-    && /opt/${GRAAL_DIR}/bin/gu install native-image || echo "GU INSTALL FAILED" \
-    && echo "=== ALL DONE ==="
+COPY ${GRAAL_TARBALL} /opt/${GRAAL_TARBALL}
+RUN echo "=== GraalVM tarball: ===" \
+    && ls -lh /opt/${GRAAL_TARBALL} \
+    && tar xzf /opt/${GRAAL_TARBALL} \
+    && rm /opt/${GRAAL_TARBALL} \
+    && echo "=== gu install native-image ===" \
+    && /opt/${GRAAL_DIR}/bin/gu install native-image \
+    && /opt/${GRAAL_DIR}/bin/native-image --version
 
 ENV JAVA_HOME=/opt/${GRAAL_DIR}
 ENV PATH=${JAVA_HOME}/bin:$PATH
