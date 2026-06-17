@@ -1,17 +1,28 @@
 FROM debian:bookworm-slim
 
-# Install GraalVM JDK + native-image deps for aarch64
-# Use || true to make apt resilient under QEMU emulation (slow downloads sometimes fail)
+# Install ONLY small host-side tools (no cross gcc via apt — too slow under QEMU).
+# The aarch64 cross gcc is pre-staged as a tarball of .deb files in the build
+# context (see download_aarch64_debs.sh). Workflow downloads debs on x86_64 host
+# (fast native apt) and stages them at /tmp/aarch64-gcc-debs.tar.gz.
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         ca-certificates curl xz-utils \
         build-essential zlib1g-dev musl-tools \
-        git \
-        gcc-aarch64-linux-gnu g++-aarch64-linux-gnu \
-        musl-tools musl-dev \
+        git dpkg \
     && rm -rf /var/lib/apt/lists/* \
-    && which curl && curl --version | head -1 \
-    && which aarch64-linux-gnu-gcc && aarch64-linux-gnu-gcc --version | head -1
+    && which curl && curl --version | head -1
+
+# Install pre-staged aarch64 cross gcc + deps from .deb tarball.
+# This is the same pattern as GraalVM tarball below — host pre-downloads,
+# COPY into container, dpkg -i. Avoids 30+ min QEMU-emulated apt install.
+COPY aarch64-gcc-debs.tar.gz /tmp/aarch64-gcc-debs.tar.gz
+RUN echo "=== aarch64 cross gcc debs ===" \
+    && ls -lh /tmp/aarch64-gcc-debs.tar.gz \
+    && mkdir -p /tmp/debs && tar xzf /tmp/aarch64-gcc-debs.tar.gz -C /tmp/debs \
+    && ls /tmp/debs/ | head -20 \
+    && dpkg -i /tmp/debs/*.deb 2>&1 | tail -20 \
+    && which aarch64-linux-gnu-gcc && aarch64-linux-gnu-gcc --version | head -1 \
+    && rm -rf /tmp/debs /tmp/aarch64-gcc-debs.tar.gz
 
 # Install GraalVM CE 21 aarch64 — use pre-downloaded tarball from build context
 # (downloaded on x86_64 host first, much faster than under QEMU emulation)

@@ -8,6 +8,7 @@ on:
       - 'reflect-config.json'
       - 'build_aarch64.sh'
       - 'Dockerfile'
+      - 'download_aarch64_debs.sh'
       - '.github/workflows/build-arm64.yml'
   workflow_dispatch:
 
@@ -41,6 +42,16 @@ jobs:
           cp /tmp/graalvm-prebuilt/graalvm-community-jdk-21.0.2_linux-aarch64_bin.tar.gz graalvm.tar.gz
           ls -lh graalvm.tar.gz
 
+      # Pre-download aarch64-linux-gnu cross gcc and all transitive deps as
+      # .deb files on the x86_64 host (native apt, fast). Then pack into a
+      # tarball and stage in the build context. The Dockerfile unpacks and
+      # installs via dpkg -i. This avoids the 30+ min QEMU-emulated apt install.
+      - name: Pre-download aarch64 cross gcc debs
+        run: |
+          chmod +x download_aarch64_debs.sh
+          ./download_aarch64_debs.sh aarch64-gcc-debs.tar.gz
+          ls -lh aarch64-gcc-debs.tar.gz
+
       - name: Build aarch64 binary in ARM container
         run: |
           docker buildx build \
@@ -49,7 +60,7 @@ jobs:
             --build-arg OUTPUT_NAME=boofcv_qr_cli_arm64 \
             --file Dockerfile \
             -t boofcv-arm64 .
-          rm -f graalvm.tar.gz
+          rm -f graalvm.tar.gz aarch64-gcc-debs.tar.gz
 
       - name: Extract binary from container
         run: |
