@@ -24,14 +24,16 @@ RUN echo "=== tarball ===" \
     && tar xzf /tmp/graalvm.tar.gz \
     && rm /tmp/graalvm.tar.gz \
     && ls /opt/${GRAAL_DIR}/bin/ | head -5 \
-    && echo "=== gu install native-image ===" \
-    && /opt/${GRAAL_DIR}/bin/gu install native-image \
-    && /opt/${GRAAL_DIR}/bin/native-image --version
+    && echo "=== native-image (pre-installed in lib/svm/bin/) ===" \
+    && ls /opt/${GRAAL_DIR}/lib/svm/bin/ \
+    && /opt/${GRAAL_DIR}/lib/svm/bin/native-image --version
 
 ENV JAVA_HOME=/opt/${GRAAL_DIR}
-ENV PATH=${JAVA_HOME}/bin:$PATH
+ENV PATH=${JAVA_HOME}/bin:${JAVA_HOME}/lib/svm/bin:$PATH
 # Symlink so build_aarch64.sh default JAVA_HOME works
 RUN ln -sf /opt/${GRAAL_DIR} /opt/graalvm-jdk-${GRAAL_VERSION}+13.1
+# Symlink native-image into bin/ so PATH lookup works
+RUN ln -sf ${JAVA_HOME}/lib/svm/bin/native-image ${JAVA_HOME}/bin/native-image
 # And set HOME so script's $HOME expansion resolves correctly
 ENV HOME=/root
 
