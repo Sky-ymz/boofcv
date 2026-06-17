@@ -1,4 +1,4 @@
-FROM --platform=linux/arm64 debian:bookworm-slim
+FROM debian:bookworm-slim
 
 # Install GraalVM JDK + native-image deps for aarch64
 # Use || true to make apt resilient under QEMU emulation (slow downloads sometimes fail)
