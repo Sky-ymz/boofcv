@@ -36,10 +36,10 @@ jobs:
               "https://github.com/graalvm/graalvm-ce-builds/releases/download/jdk-21.0.2/graalvm-community-jdk-21.0.2_linux-aarch64_bin.tar.gz"
           fi
           ls -lh /tmp/graalvm-prebuilt/
-          # Symlink into build context
+          # Copy (NOT symlink — docker build context doesn't follow symlinks)
           cd $GITHUB_WORKSPACE
-          ln -sf /tmp/graalvm-prebuilt/graalvm-community-jdk-21.0.2_linux-aarch64_bin.tar.gz graalvm.tar.gz
-          ls -la graalvm.tar.gz
+          cp /tmp/graalvm-prebuilt/graalvm-community-jdk-21.0.2_linux-aarch64_bin.tar.gz graalvm.tar.gz
+          ls -lh graalvm.tar.gz
 
       - name: Build aarch64 binary in ARM container
         run: |
