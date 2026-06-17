@@ -1,0 +1,77 @@
+name: build-arm64-native
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'reflect-config.json'
+      - 'build_aarch64.sh'
+      - '.github/workflows/build-arm64.yml'
+  workflow_dispatch:    # 允许手动触发
+
+jobs:
+  build-aarch64:
+    runs-on: ubuntu-24.04-arm64    # GitHub 原生 aarch64 runner (免费)
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install aarch64 musl toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y musl-tools gcc-aarch64-linux-gnu zlib1g-dev
+          # musl-gcc wrapper for aarch64
+          which musl-gcc
+
+      - name: Set up GraalVM CE 21 aarch64
+        uses: graalvm/setup-graalvm@v1
+        with:
+          java-version: '21'
+          distribution: 'graalvm-community'
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install native-image component
+        run: |
+          gu install native-image
+          native-image --version
+
+      - name: Cache build outputs
+        uses: actions/cache@v4
+        with:
+          path: |
+            build-output/
+          key: ${{ runner.os }}-native-image-${{ hashFiles('reflect-config.json', 'build_aarch64.sh') }}
+
+      - name: Build aarch64 native binary
+        run: |
+          mkdir -p build-output
+          chmod +x build_aarch64.sh
+          ./build_aarch64.sh
+          ls -lh build-output/
+
+      - name: Smoke test on aarch64
+        run: |
+          # quick sanity check
+          file boofcv_qr_cli_arm64
+          # don't actually run because we don't have a QR test image in repo
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: boofcv_qr_cli-arm64-${{ github.sha }}
+          path: boofcv_qr_cli_arm64
+          retention-days: 7
+
+      - name: Print download info
+        run: |
+          echo ""
+          echo "=========================================="
+          echo "✅ aarch64 native binary ready!"
+          echo "Download from:"
+          echo "  https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          echo ""
+          echo "Artifact: boofcv_qr_cli-arm64-${{ github.sha }}"
+          echo "Size: $(du -h boofcv_qr_cli_arm64 | cut -f1)"
+          echo "=========================================="

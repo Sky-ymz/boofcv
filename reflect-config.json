@@ -1,0 +1,856 @@
+[
+  {
+    "name": "boofcv.alg.fiducial.qrcode.QrCode$Alignment",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "[Lboofcv.alg.fiducial.qrcode.QrCode$Alignment;",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "boofcv.alg.fiducial.qrcode.QrCode$ErrorLevel",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "[Lboofcv.alg.fiducial.qrcode.QrCode$ErrorLevel;",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "boofcv.alg.fiducial.qrcode.QrCode$Mode",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "[Lboofcv.alg.fiducial.qrcode.QrCode$Mode;",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "boofcv.alg.fiducial.microqr.MicroQrCodeMaskPattern",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "[Lboofcv.alg.fiducial.microqr.MicroQrCodeMaskPattern;",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "boofcv.alg.fiducial.aztec.AztecCode$Structure",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "[Lboofcv.alg.fiducial.aztec.AztecCode$Structure;",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "boofcv.alg.shapes.polyline.splitmerge.PolylineSplitMerge$Corner",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "[Lboofcv.alg.shapes.polyline.splitmerge.PolylineSplitMerge$Corner;",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "boofcv.alg.shapes.polyline.splitmerge.PolylineSplitMerge$Side",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "[Lboofcv.alg.shapes.polyline.splitmerge.PolylineSplitMerge$Side;",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "boofcv.alg.shapes.polyline.splitmerge.PolylineSplitMerge$CandidatePolyline",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "[Lboofcv.alg.shapes.polyline.splitmerge.PolylineSplitMerge$CandidatePolyline;",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "[Lboofcv.alg.fiducial.calib.squares.SquareEdge;",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "[Lboofcv.alg.fiducial.qrcode.PositionPatternNode;",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "[Lboofcv.alg.fiducial.qrcode.QrCode;",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "[Lboofcv.alg.filter.binary.ContourPacked;",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "[Lboofcv.alg.shapes.polygon.DetectPolygonFromContour$Info;",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "[Lboofcv.struct.BlockIndexLength;",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "[Lgeoregression.struct.line.LineSegment2D_F64;",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "[Lgeoregression.struct.point.Point2D_F64;",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "[Lgeoregression.struct.point.Point2D_I32;",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "[Lorg.ddogleg.nn.NnData;",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "[Lorg.ddogleg.nn.alg.KdTreeResult;",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "boofcv.alg.geo.h.HomographyDirectLinearTransform",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "allDeclaredMethods": true,
+    "allPublicMethods": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "boofcv.alg.geo.h.AdjustHomographyMatrix",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "allDeclaredMethods": true,
+    "allPublicMethods": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "boofcv.alg.geo.NormalizationPoint2D",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "allDeclaredMethods": true,
+    "allPublicMethods": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "org.ejml.dense.row.linsol.svd.SolveNullSpaceSvd_DDRM",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "allDeclaredMethods": true,
+    "allPublicMethods": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "org.ejml.dense.row.factory.DecompositionFactory_DDRM",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "allDeclaredMethods": true,
+    "allPublicMethods": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "org.ejml.dense.row.SingularValueDecomposition_DDRM",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "allDeclaredMethods": true,
+    "allPublicMethods": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "org.ejml.dense.row.SingularValueDecomposition_MT_DDRM",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "allDeclaredMethods": true,
+    "allPublicMethods": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "org.ejml.dense.row.SvdImplicitQrDecompose_DDRM",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "allDeclaredMethods": true,
+    "allPublicMethods": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "boofcv.factory.geo.FactoryMultiView",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "allDeclaredMethods": true,
+    "allPublicMethods": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "[Lboofcv.struct.geo.AssociatedPair;",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "boofcv.struct.geo.AssociatedPair",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "boofcv.struct.geo.PointIndex2D_F32",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "[Lboofcv.struct.geo.PointIndex2D_F32;",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "boofcv.struct.geo.PointIndex",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "[Lboofcv.struct.geo.PointIndex;",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "boofcv.struct.geo.Point2D3D",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "[Lboofcv.struct.geo.Point2D3D;",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "boofcv.struct.geo.GeoLL_F64",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "[Lboofcv.struct.geo.GeoLL_F64;",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "boofcv.struct.geo.AssociatedTupleN",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "[Lboofcv.struct.geo.AssociatedTupleN;",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "boofcv.struct.geo.AssociatedTupleDN",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "[Lboofcv.struct.geo.AssociatedTupleDN;",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "boofcv.struct.geo.AssociatedPairConic",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "[Lboofcv.struct.geo.AssociatedPairConic;",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "boofcv.struct.geo.PointIndex3D_F32",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "[Lboofcv.struct.geo.PointIndex3D_F32;",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "boofcv.struct.geo.ScaleTranslateRotate2D",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "[Lboofcv.struct.geo.ScaleTranslateRotate2D;",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "boofcv.struct.geo.TrifocalTensor",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "[Lboofcv.struct.geo.TrifocalTensor;",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "boofcv.struct.geo.PointIndex3D_F64",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "[Lboofcv.struct.geo.PointIndex3D_F64;",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "boofcv.struct.geo.AssociatedPair3D",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "[Lboofcv.struct.geo.AssociatedPair3D;",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "boofcv.struct.geo.QueueMatrix",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "[Lboofcv.struct.geo.QueueMatrix;",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "boofcv.struct.geo.GeoLL_F32",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "[Lboofcv.struct.geo.GeoLL_F32;",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "boofcv.struct.geo.PointIndex4D_F32",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "[Lboofcv.struct.geo.PointIndex4D_F32;",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "boofcv.struct.geo.GeoModelEstimator1",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "[Lboofcv.struct.geo.GeoModelEstimator1;",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "boofcv.struct.geo.ScaleTranslate2D",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "[Lboofcv.struct.geo.ScaleTranslate2D;",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "boofcv.struct.geo.PairLineNorm",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "[Lboofcv.struct.geo.PairLineNorm;",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "boofcv.struct.geo.PointIndex4D_F64",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "[Lboofcv.struct.geo.PointIndex4D_F64;",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "boofcv.struct.geo.Point2D4D",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "[Lboofcv.struct.geo.Point2D4D;",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "boofcv.struct.geo.AssociatedTriple",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "[Lboofcv.struct.geo.AssociatedTriple;",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "boofcv.struct.geo.GeoModelEstimatorN",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "[Lboofcv.struct.geo.GeoModelEstimatorN;",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "boofcv.struct.geo.PointIndex2D_F64",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "[Lboofcv.struct.geo.PointIndex2D_F64;",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "boofcv.struct.geo.AssociatedTuple",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "[Lboofcv.struct.geo.AssociatedTuple;",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "georegression.struct.line.LineParametric3D_F32",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "[Lgeoregression.struct.line.LineParametric3D_F32;",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "georegression.struct.line.LineSegment2D_F64",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "georegression.struct.line.LineSegment2D_F32",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "[Lgeoregression.struct.line.LineSegment2D_F32;",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "georegression.struct.line.LineSegment3D_F32",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "[Lgeoregression.struct.line.LineSegment3D_F32;",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "georegression.struct.line.LineSegment3D_F64",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "[Lgeoregression.struct.line.LineSegment3D_F64;",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "georegression.struct.line.LinePolar2D_F32",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "[Lgeoregression.struct.line.LinePolar2D_F32;",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "georegression.struct.line.LineSegment2D_I32",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "[Lgeoregression.struct.line.LineSegment2D_I32;",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "georegression.struct.line.LinePolar2D_F64",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "[Lgeoregression.struct.line.LinePolar2D_F64;",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "georegression.struct.line.LineGeneral2D_F32",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "[Lgeoregression.struct.line.LineGeneral2D_F32;",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "georegression.struct.line.LineGeneral2D_F64",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "[Lgeoregression.struct.line.LineGeneral2D_F64;",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "georegression.struct.line.LineParametric2D_F64",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "[Lgeoregression.struct.line.LineParametric2D_F64;",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "georegression.struct.line.LineParametric2D_I32",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "[Lgeoregression.struct.line.LineParametric2D_I32;",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "georegression.struct.line.LineParametric3D_F64",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "[Lgeoregression.struct.line.LineParametric3D_F64;",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "georegression.struct.line.LineParametric2D_F32",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "[Lgeoregression.struct.line.LineParametric2D_F32;",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "georegression.struct.point.Vector4D_F64",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "[Lgeoregression.struct.point.Vector4D_F64;",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "georegression.struct.point.Vector3D_F64",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "[Lgeoregression.struct.point.Vector3D_F64;",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "georegression.struct.point.Point4D_F32",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "[Lgeoregression.struct.point.Point4D_F32;",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "georegression.struct.point.Vector2D_F32",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "[Lgeoregression.struct.point.Vector2D_F32;",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "georegression.struct.point.Point4D_F64",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "[Lgeoregression.struct.point.Point4D_F64;",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "georegression.struct.point.Point2D_F32",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "[Lgeoregression.struct.point.Point2D_F32;",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "georegression.struct.point.Vector4D_F32",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "[Lgeoregression.struct.point.Vector4D_F32;",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "georegression.struct.point.Point3D_F32",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "[Lgeoregression.struct.point.Point3D_F32;",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "georegression.struct.point.Point2D_F64",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "georegression.struct.point.Point3D_F64",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "[Lgeoregression.struct.point.Point3D_F64;",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "georegression.struct.point.Point2D_I16",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "[Lgeoregression.struct.point.Point2D_I16;",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "georegression.struct.point.Point2D_I32",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "georegression.struct.point.Vector3D_F32",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "[Lgeoregression.struct.point.Vector3D_F32;",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "georegression.struct.point.Point3D_I32",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "[Lgeoregression.struct.point.Point3D_I32;",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "georegression.struct.point.Vector2D_F64",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "[Lgeoregression.struct.point.Vector2D_F64;",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "georegression.struct.se.SpecialEuclideanOps_F32",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "[Lgeoregression.struct.se.SpecialEuclideanOps_F32;",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "georegression.struct.se.Se3_F32$1",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "[Lgeoregression.struct.se.Se3_F32$1;",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "georegression.struct.se.SpecialEuclideanOps_F64",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "[Lgeoregression.struct.se.SpecialEuclideanOps_F64;",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "georegression.struct.se.Se3_F32",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "[Lgeoregression.struct.se.Se3_F32;",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "georegression.struct.se.Se2_F32",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "[Lgeoregression.struct.se.Se2_F32;",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "georegression.struct.se.SpecialEuclidean",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "[Lgeoregression.struct.se.SpecialEuclidean;",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "georegression.struct.se.Se2_F64",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "[Lgeoregression.struct.se.Se2_F64;",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "georegression.struct.se.Se3_F64",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "[Lgeoregression.struct.se.Se3_F64;",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "georegression.struct.se.Se3_F64$1",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "[Lgeoregression.struct.se.Se3_F64$1;",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "georegression.struct.affine.Affine",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "[Lgeoregression.struct.affine.Affine;",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "georegression.struct.affine.Affine2D_F64",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "[Lgeoregression.struct.affine.Affine2D_F64;",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "georegression.struct.affine.Affine2D_F32",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "[Lgeoregression.struct.affine.Affine2D_F32;",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "georegression.struct.affine.UtilAffine",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "[Lgeoregression.struct.affine.UtilAffine;",
+    "unsafeAllocated": true
+  }
+]

@@ -1,0 +1,28 @@
+# Build artifacts
+*.bin
+*.o
+*.a
+*.so
+*.dylib
+*.dll
+boofcv_qr_cli
+boofcv_qr_cli_arm64
+*.signed.elf
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.iml
+
+# Temp
+*.log
+*.tmp
+build-output/
+
+# Cache
+.gradle/
+build/
