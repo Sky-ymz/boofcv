@@ -18,18 +18,22 @@ ARG GRAAL_DIR=graalvm-community-openjdk-${GRAAL_VERSION}+13.1
 ARG GRAAL_TARBALL=graalvm-community-jdk-${GRAAL_VERSION}_linux-aarch64_bin.tar.gz
 WORKDIR /opt
 COPY ${GRAAL_TARBALL} /opt/${GRAAL_TARBALL}
-RUN echo "=== GraalVM tarball: ===" \
+RUN echo "=== STEP 1: tarball exists? ===" \
     && ls -lh /opt/${GRAAL_TARBALL} \
+    && echo "=== STEP 2: tarball type ===" \
     && file /opt/${GRAAL_TARBALL} \
-    && echo "=== extracting ===" \
-    && tar xzf /opt/${GRAAL_TARBALL} \
-    && rm /opt/${GRAAL_TARBALL} \
-    && echo "=== /opt after extract ===" \
+    && echo "=== STEP 3: extract ===" \
+    && cd /opt \
+    && tar xzf ${GRAAL_TARBALL} 2>&1 | tail -3 \
+    && echo "=== STEP 4: /opt after extract ===" \
     && ls -la /opt/ \
-    && ls /opt/${GRAAL_DIR}/bin/ 2>&1 | head -5 \
-    && echo "=== gu install native-image ===" \
-    && /opt/${GRAAL_DIR}/bin/gu install native-image \
-    && /opt/${GRAAL_DIR}/bin/native-image --version
+    && echo "=== STEP 5: target dir ===" \
+    && ls /opt/${GRAAL_DIR}/bin/ 2>&1 | head -10 \
+    && rm ${GRAAL_TARBALL} \
+    && echo "=== STEP 6: gu install native-image ===" \
+    && /opt/${GRAAL_DIR}/bin/gu install native-image 2>&1 | tail -10 \
+    && echo "=== STEP 7: native-image version ===" \
+    && /opt/${GRAAL_DIR}/bin/native-image --version 2>&1
 
 ENV JAVA_HOME=/opt/${GRAAL_DIR}
 ENV PATH=${JAVA_HOME}/bin:$PATH
