@@ -7,7 +7,7 @@ FROM debian:bookworm-slim
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         ca-certificates curl xz-utils \
-        build-essential zlib1g-dev musl-tools \
+        build-essential zlib1g-dev musl-tools file \
         git dpkg \
     && rm -rf /var/lib/apt/lists/* \
     && which curl && curl --version | head -1
@@ -62,8 +62,7 @@ ENV OUTPUT_NAME=${OUTPUT_NAME}
 
 RUN chmod +x build_aarch64.sh \
     && ./build_aarch64.sh \
-    && ls -lh ${OUTPUT_NAME} \
-    && file ${OUTPUT_NAME}
+    && ls -lh ${OUTPUT_NAME}
 
 # Default: nothing to run; binary is extracted via `docker buildx build --load`
 CMD ["/bin/bash"]

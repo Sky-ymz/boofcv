@@ -57,7 +57,7 @@ echo "[INFO] Output: $OUTPUT_NAME (libc=$LIBC_MODE)"
 # ----- 后处理 -----------------------------------------------------------------
 if [ -f "$OUTPUT_NAME" ]; then
     SIZE=$(du -h "$OUTPUT_NAME" | cut -f1)
-    FILE_TYPE=$(file "$OUTPUT_NAME")
+    FILE_TYPE=$(file "$OUTPUT_NAME" 2>/dev/null || echo "ELF binary (file cmd not available)")
     echo ""
     echo "============================================================"
     echo "[OK] Built $OUTPUT_NAME ($SIZE)"
