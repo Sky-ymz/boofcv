@@ -15,12 +15,23 @@ ARG GRAAL_VERSION=21.0.2
 ARG GRAAL_DIR=graalvm-jdk-${GRAAL_VERSION}+13.1
 ARG GRAAL_TARBALL=graalvm-community-jdk-${GRAAL_VERSION}_linux-aarch64_bin.tar.gz
 WORKDIR /opt
-RUN curl -fsSL -o ${GRAAL_TARBALL} \
-        "https://github.com/graalvm/graalvm-ce-builds/releases/download/jdk-${GRAAL_VERSION}/${GRAAL_TARBALL}" \
-    && ls -lh ${GRAAL_TARBALL} \
-    && tar xzf ${GRAAL_TARBALL} \
+
+# Step-by-step with diagnostic prints to identify which step fails
+RUN echo "=== STEP 1: which tools ===" \
+    && which curl || echo "curl NOT FOUND" \
+    && which tar || echo "tar NOT FOUND" \
+    && which xz || echo "xz NOT FOUND" \
+    && echo "=== STEP 2: download ===" \
+    && curl -fL -o ${GRAAL_TARBALL} \
+        "https://github.com/graalvm/graalvm-ce-builds/releases/download/jdk-${GRAAL_VERSION}/${GRAAL_TARBALL}" || echo "DOWNLOAD FAILED exit=$?" \
+    && ls -lh ${GRAAL_TARBALL} || echo "LIST FAILED" \
+    && echo "=== STEP 3: extract ===" \
+    && tar xzf ${GRAAL_TARBALL} || echo "EXTRACT FAILED" \
     && rm ${GRAAL_TARBALL} \
-    && /opt/${GRAAL_DIR}/bin/gu install native-image
+    && ls /opt/${GRAAL_DIR}/bin/ 2>&1 | head -5 \
+    && echo "=== STEP 4: install native-image ===" \
+    && /opt/${GRAAL_DIR}/bin/gu install native-image || echo "GU INSTALL FAILED" \
+    && echo "=== ALL DONE ==="
 
 ENV JAVA_HOME=/opt/${GRAAL_DIR}
 ENV PATH=${JAVA_HOME}/bin:$PATH
