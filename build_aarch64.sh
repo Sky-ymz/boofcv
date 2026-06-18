@@ -56,15 +56,24 @@ fi
 echo "[INFO] Java: $($JAVA_HOME/bin/java -version 2>&1 | head -1)"
 echo "[INFO] Output: $OUTPUT_NAME (libc=$LIBC_MODE)"
 
-"$NATIVE_IMAGE" \
-    --no-fallback \
-    -H:Name="$OUTPUT_NAME" \
-    -H:ReflectionConfigurationFiles=reflect-config.json \
-    --initialize-at-run-time=boofcv,georegression,org.ddogleg,org.ejml \
-    --libc="$LIBC_MODE" \
-    --static \
-    -cp "classpath_exploded:${JARS}" \
-    boofcv.cli.BoofCvCliMin
+# Build native-image args. When using musl, we MUST tell native-image which
+# cross gcc to use (it would otherwise default to the host arch's musl gcc,
+# which doesn't exist on x86_64 host). -H:CCompilerPath takes precedence.
+NATIVE_IMAGE_ARGS=(
+    --no-fallback
+    -H:Name="$OUTPUT_NAME"
+    -H:ReflectionConfigurationFiles=reflect-config.json
+    --initialize-at-run-time=boofcv,georegression,org.ddogleg,org.ejml
+    --libc="$LIBC_MODE"
+    --static
+    -cp "classpath_exploded:${JARS}"
+)
+if [ "$LIBC_MODE" = "musl" ] && command -v aarch64-linux-musl-gcc >/dev/null 2>&1; then
+    NATIVE_IMAGE_ARGS+=(-H:CCompilerPath="$(command -v aarch64-linux-musl-gcc)")
+    echo "[INFO] Using cross gcc: $(command -v aarch64-linux-musl-gcc)"
+fi
+
+"$NATIVE_IMAGE" "${NATIVE_IMAGE_ARGS[@]}" boofcv.cli.BoofCvCliMin
 
 # ----- 后处理 -----------------------------------------------------------------
 if [ -f "$OUTPUT_NAME" ]; then
