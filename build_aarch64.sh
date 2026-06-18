@@ -77,8 +77,8 @@ fi
 
 # ----- 后处理 -----------------------------------------------------------------
 if [ -f "$OUTPUT_NAME" ]; then
-    SIZE=$(du -h "$OUTPUT_NAME" | cut -f1)
-    FILE_TYPE=$(file "$OUTPUT_NAME" 2>/dev/null || echo "ELF binary (file cmd not available)")
+    SIZE=$(du -h "$OUTPUT_NAME" 2>/dev/null | cut -f1) || SIZE="unknown"
+    FILE_TYPE=$(file "$OUTPUT_NAME" 2>/dev/null) || FILE_TYPE="ELF binary (file cmd not available)"
     echo ""
     echo "============================================================"
     echo "[OK] Built $OUTPUT_NAME ($SIZE)"
@@ -91,6 +91,8 @@ if [ -f "$OUTPUT_NAME" ]; then
     echo "鸿蒙签名（如果需要）:"
     echo "  python3 sign_el2.py --private-key ohos.pem \\"
     echo "        --input $OUTPUT_NAME --output ${OUTPUT_NAME}_signed.elf"
+    # CRITICAL: explicit success exit 0 — binary already produced
+    exit 0
 else
     echo "[ERROR] build failed — $OUTPUT_NAME not produced"
     exit 1
