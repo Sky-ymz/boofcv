@@ -8,7 +8,6 @@ on:
       - 'reflect-config.json'
       - 'build_aarch64.sh'
       - 'Dockerfile'
-      - 'download_aarch64_debs.sh'
       - '.github/workflows/build-arm64.yml'
   workflow_dispatch:
 
@@ -42,15 +41,24 @@ jobs:
           cp /tmp/graalvm-prebuilt/graalvm-community-jdk-21.0.2_linux-aarch64_bin.tar.gz graalvm.tar.gz
           ls -lh graalvm.tar.gz
 
-      # Pre-download aarch64-linux-gnu cross gcc and all transitive deps as
-      # .deb files on the x86_64 host (native apt, fast). Then pack into a
-      # tarball and stage in the build context. The Dockerfile unpacks and
-      # installs via dpkg -i. This avoids the 30+ min QEMU-emulated apt install.
-      - name: Pre-download aarch64 cross gcc debs
+      # Pre-download aarch64-linux-musl cross gcc from musl.cc.
+      # musl libc is required because OpenHarmony PC user space is musl-based;
+      # glibc static binaries segfault on TLS init. musl.cc provides pre-built
+      # cross toolchains (~100MB) — downloaded on x86_64 host (fast native).
+      - name: Pre-download aarch64 musl cross gcc
         run: |
-          chmod +x download_aarch64_debs.sh
-          ./download_aarch64_debs.sh aarch64-gcc-debs.tar.gz
-          ls -lh aarch64-gcc-debs.tar.gz
+          mkdir -p /tmp/musl-prebuilt
+          cd /tmp/musl-prebuilt
+          if [ ! -f aarch64-linux-musl-cross.tgz ]; then
+            echo "Downloading musl cross toolchain from musl.cc..."
+            curl -fL -o aarch64-linux-musl-cross.tgz \
+              "https://musl.cc/aarch64-linux-musl-cross.tgz"
+          fi
+          ls -lh /tmp/musl-prebuilt/
+          # Copy (NOT symlink — docker build context doesn't follow symlinks)
+          cd $GITHUB_WORKSPACE
+          cp /tmp/musl-prebuilt/aarch64-linux-musl-cross.tgz aarch64-musl-cross.tgz
+          ls -lh aarch64-musl-cross.tgz
 
       - name: Build aarch64 binary in ARM container
         run: |
@@ -60,7 +68,7 @@ jobs:
             --build-arg OUTPUT_NAME=boofcv_qr_cli_arm64 \
             --file Dockerfile \
             -t boofcv-arm64 .
-          rm -f graalvm.tar.gz aarch64-gcc-debs.tar.gz
+          rm -f graalvm.tar.gz aarch64-musl-cross.tgz
 
       - name: Extract binary from container
         run: |

@@ -8,21 +8,29 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         ca-certificates curl xz-utils \
         build-essential zlib1g-dev musl-tools file \
-        git dpkg \
+        git \
     && rm -rf /var/lib/apt/lists/* \
     && which curl && curl --version | head -1
 
-# Install pre-staged aarch64 cross gcc + deps from .deb tarball.
-# This is the same pattern as GraalVM tarball below — host pre-downloads,
-# COPY into container, dpkg -i. Avoids 30+ min QEMU-emulated apt install.
-COPY aarch64-gcc-debs.tar.gz /tmp/aarch64-gcc-debs.tar.gz
-RUN echo "=== aarch64 cross gcc debs ===" \
-    && ls -lh /tmp/aarch64-gcc-debs.tar.gz \
-    && mkdir -p /tmp/debs && tar xzf /tmp/aarch64-gcc-debs.tar.gz -C /tmp/debs \
-    && ls /tmp/debs/ | head -20 \
-    && dpkg -i /tmp/debs/*.deb 2>&1 | tail -20 \
-    && which aarch64-linux-gnu-gcc && aarch64-linux-gnu-gcc --version | head -1 \
-    && rm -rf /tmp/debs /tmp/aarch64-gcc-debs.tar.gz
+# Install aarch64-linux-musl cross gcc from pre-staged musl.cc tarball.
+# Same pattern as GraalVM below — host pre-downloads (musl.cc, fast native),
+# COPY into container, untar. musl libc is required because OpenHarmony PC
+# user space is musl-based; glibc static binaries segfault on TLS init.
+COPY aarch64-musl-cross.tgz /tmp/aarch64-musl-cross.tgz
+RUN echo "=== aarch64 musl cross gcc ===" \
+    && ls -lh /tmp/aarch64-musl-cross.tgz \
+    && mkdir -p /opt/musl-toolchain \
+    && tar xzf /tmp/aarch64-musl-cross.tgz -C /opt/musl-toolchain \
+    && ls /opt/musl-toolchain/ \
+    && ls /opt/musl-toolchain/*/bin/ | head -5 \
+    && rm /tmp/aarch64-musl-cross.tgz
+
+ENV PATH=/opt/musl-toolchain/*/bin:\$PATH
+# Symlink with a stable name so build_aarch64.sh can find it deterministically
+RUN MUSL_BIN=$(ls -d /opt/musl-toolchain/*/bin | head -1) \
+    && ln -sf "$MUSL_BIN/aarch64-linux-musl-gcc" /usr/local/bin/aarch64-linux-musl-gcc \
+    && ln -sf "$MUSL_BIN/aarch64-linux-musl-g++" /usr/local/bin/aarch64-linux-musl-g++ \
+    && which aarch64-linux-musl-gcc && aarch64-linux-musl-gcc --version | head -1
 
 # Install GraalVM CE 21 aarch64 — use pre-downloaded tarball from build context
 # (downloaded on x86_64 host first, much faster than under QEMU emulation)

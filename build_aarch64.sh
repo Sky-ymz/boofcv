@@ -14,6 +14,18 @@ cd "$SCRIPT_DIR"
 export JAVA_HOME="${JAVA_HOME:-$HOME/graalvm-jdk-21.0.2+13.1}"
 NATIVE_IMAGE="$JAVA_HOME/bin/native-image"
 
+# When using musl, point native-image to aarch64-linux-musl-gcc explicitly.
+# In docker build, the toolchain tarball installs these to /usr/bin/ — but
+# they have the "-gnu" suffix. Override the name here:
+if [ "$LIBC_MODE" = "musl" ]; then
+    if command -v aarch64-linux-musl-gcc >/dev/null 2>&1; then
+        export CC=aarch64-linux-musl-gcc
+    elif command -v aarch64-linux-gnu-gcc >/dev/null 2>&1; then
+        # Fallback: use gnu gcc but link against musl via -H:CCompilerPath
+        export CC=aarch64-linux-gnu-gcc
+    fi
+fi
+
 if [ ! -x "$NATIVE_IMAGE" ]; then
     echo "[ERROR] native-image not found at $NATIVE_IMAGE"
     echo "        Set JAVA_HOME or install native-image:"
@@ -22,7 +34,7 @@ if [ ! -x "$NATIVE_IMAGE" ]; then
 fi
 
 OUTPUT_NAME="${OUTPUT_NAME:-boofcv_qr_cli_arm64}"
-LIBC_MODE="${LIBC_MODE:-glibc}"   # 鸿蒙 PC 标准系统用 GNU libc，不是 musl
+LIBC_MODE="${LIBC_MODE:-musl}"    # 鸿蒙 PC 用户态基于 musl，必须用 musl 静态链接
 
 # ----- 依赖检查 ---------------------------------------------------------------
 if [ ! -d classpath_exploded ]; then
