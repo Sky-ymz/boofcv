@@ -4,7 +4,7 @@
 # 鸿蒙 PC / aarch64 Linux 上把 BoofCV CLI 编成 native binary
 # 验证环境：OpenHarmony 6.0 PC + GraalVM CE 21.0.2 aarch64 JDK
 ###############################################################################
-set -euo pipefail
+set -eo pipefail
 
 # ----- 配置 -------------------------------------------------------------------
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
