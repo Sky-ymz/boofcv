@@ -52,7 +52,7 @@ jobs:
           if [ ! -f aarch64-linux-musl-cross.tgz ]; then
             echo "Downloading musl cross toolchain from musl.cc..."
             curl -fL -o aarch64-linux-musl-cross.tgz \
-              "https://musl.cc/aarch64-linux-musl-cross.tgz"
+              "https://more.musl.cc/11/x86_64-linux-musl/aarch64-linux-musl-cross.tgz"
           fi
           ls -lh /tmp/musl-prebuilt/
           # Copy (NOT symlink — docker build context doesn't follow symlinks)
