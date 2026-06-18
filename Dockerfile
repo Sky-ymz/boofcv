@@ -29,7 +29,7 @@ RUN echo "=== reassembling musl toolchain ===" \
     && ls /opt/musl-toolchain/*/bin/ | head -5 \
     && rm /tmp/aarch64-musl-cross.tgz
 
-ENV PATH=/opt/musl-toolchain/*/bin:\$PATH
+ENV PATH=/opt/musl-toolchain/*/bin:/usr/local/bin:/usr/bin:/bin:\$PATH
 # Symlink with a stable name so build_aarch64.sh can find it deterministically
 RUN MUSL_BIN=$(ls -d /opt/musl-toolchain/*/bin | head -1) \
     && ln -sf "$MUSL_BIN/aarch64-linux-musl-gcc" /usr/local/bin/aarch64-linux-musl-gcc \
