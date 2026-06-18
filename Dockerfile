@@ -12,13 +12,17 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/* \
     && which curl && curl --version | head -1
 
-# Install aarch64-linux-musl cross gcc from pre-staged musl.cc tarball.
-# Same pattern as GraalVM below — host pre-downloads (musl.cc, fast native),
-# COPY into container, untar. musl libc is required because OpenHarmony PC
+# Install aarch64-linux-musl cross gcc from split musl toolchain parts.
+# musl.cc toolchain is 101MB — over GitHub's 100MB single-file push limit.
+# Split it into 2 parts (~80MB + ~21MB), commit both, then cat them back
+# together in the container. musl libc is required because OpenHarmony PC
 # user space is musl-based; glibc static binaries segfault on TLS init.
-COPY aarch64-musl-cross.tgz /tmp/aarch64-musl-cross.tgz
-RUN echo "=== aarch64 musl cross gcc ===" \
+COPY musl_part_aa musl_part_ab /tmp/
+RUN echo "=== reassembling musl toolchain ===" \
+    && ls -lh /tmp/musl_part_* \
+    && cat /tmp/musl_part_aa /tmp/musl_part_ab > /tmp/aarch64-musl-cross.tgz \
     && ls -lh /tmp/aarch64-musl-cross.tgz \
+    && rm /tmp/musl_part_aa /tmp/musl_part_ab \
     && mkdir -p /opt/musl-toolchain \
     && tar xzf /tmp/aarch64-musl-cross.tgz -C /opt/musl-toolchain \
     && ls /opt/musl-toolchain/ \

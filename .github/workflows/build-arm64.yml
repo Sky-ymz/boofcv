@@ -41,25 +41,6 @@ jobs:
           cp /tmp/graalvm-prebuilt/graalvm-community-jdk-21.0.2_linux-aarch64_bin.tar.gz graalvm.tar.gz
           ls -lh graalvm.tar.gz
 
-      # Pre-download aarch64-linux-musl cross gcc from musl.cc.
-      # musl libc is required because OpenHarmony PC user space is musl-based;
-      # glibc static binaries segfault on TLS init. musl.cc provides pre-built
-      # cross toolchains (~100MB) — downloaded on x86_64 host (fast native).
-      - name: Pre-download aarch64 musl cross gcc
-        run: |
-          mkdir -p /tmp/musl-prebuilt
-          cd /tmp/musl-prebuilt
-          if [ ! -f aarch64-linux-musl-cross.tgz ]; then
-            echo "Downloading musl cross toolchain from musl.cc..."
-            curl -fL -o aarch64-linux-musl-cross.tgz \
-              "https://more.musl.cc/11/x86_64-linux-musl/aarch64-linux-musl-cross.tgz"
-          fi
-          ls -lh /tmp/musl-prebuilt/
-          # Copy (NOT symlink — docker build context doesn't follow symlinks)
-          cd $GITHUB_WORKSPACE
-          cp /tmp/musl-prebuilt/aarch64-linux-musl-cross.tgz aarch64-musl-cross.tgz
-          ls -lh aarch64-musl-cross.tgz
-
       - name: Build aarch64 binary in ARM container
         run: |
           docker buildx build \
@@ -68,7 +49,7 @@ jobs:
             --build-arg OUTPUT_NAME=boofcv_qr_cli_arm64 \
             --file Dockerfile \
             -t boofcv-arm64 .
-          rm -f graalvm.tar.gz aarch64-musl-cross.tgz
+          rm -f graalvm.tar.gz
 
       - name: Extract binary from container
         run: |
