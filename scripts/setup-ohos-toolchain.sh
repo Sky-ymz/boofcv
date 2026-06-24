@@ -1,5 +1,7 @@
 #!/bin/bash
 # Setup OHOS toolchain wrappers
+# 关键: OpenJDK 探测 CC 时调 -E /tmp/dummy.c (预处理测试)
+# 我们也拦截 -E 探测返回 gcc
 set -uo pipefail
 
 SYSROOT_DIR="$1"
@@ -30,22 +32,32 @@ for link_name in crtend.o crtendS.o crtendT.o; do
 done
 ln -sf "$KMP_LIBS/libclang_rt.builtins.a" "$SYSROOT_LIB_AARCH64/libclang_rt.builtins.a" || true
 
-# Wrapper: 拦截探测 + log 所有调用
+# Wrapper: 拦截所有探测调用 (探测特征: 1-3 args 或 args 含 -E 或 file dummy.c)
+# 真编译: -c/-S/... + 真实文件
 cat > "$TOOLCHAIN_BIN/aarch64-unknown-linux-ohos-clang" << 'WRAPPER_EOF'
 #!/bin/bash
-# Log all invocations to debug OpenJDK probing
+# Log all calls
 echo "CC-INVOKE args=[$*] cwd=$(pwd)" >> /tmp/cc-invoke.log
 
-# 探测: 任何短调用 (1-3 args) 都返回 gcc (OpenJDK 探测)
-if [ "$#" -le 3 ]; then
-    case "$1" in
-        --version|-v|-V|-dumpversion|-dumpfullversion|--help|-E|-dM)
-            echo "gcc version 13.2.0 (Ubuntu 13.2.0-23ubuntu4)"
-            exit 0
+# 判断是不是探测调用
+is_probe=false
+# 探测特征 1: 1-3 个 args 且包含 -E/-v/-V/-dumpversion/--version
+# 探测特征 2: 任何 dummy.c / -dumpmachine / -print-prog-name 等
+for arg in "$@"; do
+    case "$arg" in
+        --version|-v|-V|-dumpversion|-dumpfullversion|--help|-E|-dM|dummy.c|-dumpmachine|-print-prog-name=*|-print-multi-directory|-print-multiarch|-print-search-dirs|-print-libgcc-file-name|-print-file-name=*)
+            is_probe=true
             ;;
     esac
+done
+
+# 探测: 返回 gcc
+if [ "$is_probe" = true ]; then
+    echo "gcc version 13.2.0 (Ubuntu 13.2.0-23ubuntu4)"
+    exit 0
 fi
-# 真正编译
+
+# 真编译: 调用 clang
 exec /usr/bin/clang-19 \
     --target=aarch64-linux-ohos \
     --sysroot=SYSROOT_PLACEHOLDER \
@@ -61,14 +73,20 @@ cat > "$TOOLCHAIN_BIN/aarch64-unknown-linux-ohos-clang++" << 'WRAPPER_EOF'
 #!/bin/bash
 echo "CXX-INVOKE args=[$*] cwd=$(pwd)" >> /tmp/cxx-invoke.log
 
-if [ "$#" -le 3 ]; then
-    case "$1" in
-        --version|-v|-V|-dumpversion|-dumpfullversion|--help|-E|-dM)
-            echo "g++ version 13.2.0 (Ubuntu 13.2.0-23ubuntu4)"
-            exit 0
+is_probe=false
+for arg in "$@"; do
+    case "$arg" in
+        --version|-v|-V|-dumpversion|-dumpfullversion|--help|-E|-dM|dummy.c|-dumpmachine|-print-prog-name=*|-print-multi-directory|-print-multiarch|-print-search-dirs|-print-libgcc-file-name|-print-file-name=*)
+            is_probe=true
             ;;
     esac
+done
+
+if [ "$is_probe" = true ]; then
+    echo "g++ version 13.2.0 (Ubuntu 13.2.0-23ubuntu4)"
+    exit 0
 fi
+
 exec /usr/bin/clang++-19 \
     --target=aarch64-linux-ohos \
     --sysroot=SYSROOT_PLACEHOLDER \
