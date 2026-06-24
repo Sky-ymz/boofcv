@@ -1,73 +1,46 @@
 #!/bin/bash
-# 在 OHOS sysroot 上创建 clang wrapper
-# 关键：让 Ubuntu clang 19 用 KMP 工具链的 aarch64-ohos resource dir
-#       (找 crtbegin/crtend/builtins 等 compiler-rt 文件)
+# Setup OHOS toolchain wrappers (dynamic link)
 set -euo pipefail
 
-SYSROOT_DIR="${1:-$(pwd)/sysroot}"
-TOOLCHAIN_BIN="${2:-$(pwd)/toolchain/bin}"
-KMP_RESOURCE_DIR="${3:-$(pwd)/kmp-resource}"
+SYSROOT_DIR="$1"
+TOOLCHAIN_BIN="$2"
+KMP_RESOURCE_DIR="$3"
 
 if [ ! -d "$SYSROOT_DIR/usr/include" ]; then
-    echo "❌ sysroot 无效: $SYSROOT_DIR"
+    echo "sysroot invalid: $SYSROOT_DIR"
     exit 1
 fi
 
 if [ ! -d "$KMP_RESOURCE_DIR/lib/aarch64-linux-ohos" ]; then
-    echo "❌ KMP resource 目录无效: $KMP_RESOURCE_DIR"
-    echo "   期望: \$KMP_RESOURCE_DIR/lib/aarch64-linux-ohos/clang_rt.crtbegin.o"
+    echo "KMP resource dir invalid: $KMP_RESOURCE_DIR"
     exit 1
 fi
 
 mkdir -p "$TOOLCHAIN_BIN"
 
-# 写 clang wrapper - 关键是 --resource-dir
-cat > "$TOOLCHAIN_BIN/aarch64-unknown-linux-ohos-clang" << WRAPPER_EOF
-#!/bin/bash
-exec /usr/bin/clang-19 \\
-    --target=aarch64-linux-ohos \\
-    --sysroot=${SYSROOT_DIR} \\
-    --gcc-toolchain=${SYSROOT_DIR} \\
-    --resource-dir=${KMP_RESOURCE_DIR} \\
-    -fuse-ld=/usr/bin/ld.lld-19 \\
-    -B${SYSROOT_DIR}/usr/lib/aarch64-linux-ohos \\
-    "\$@"
-WRAPPER_EOF
-chmod +x "$TOOLCHAIN_BIN/aarch64-unknown-linux-ohos-clang"
+# 写 wrapper (一行 exec, 避免续行)
+WRAPPER_CLANG="#!/bin/bash
+exec /usr/bin/clang-19 --target=aarch64-linux-ohos --sysroot=$SYSROOT_DIR --gcc-toolchain=$SYSROOT_DIR --resource-dir=$KMP_RESOURCE_DIR -fuse-ld=/usr/bin/ld.lld-19 -B$SYSROOT_DIR/usr/lib/aarch64-linux-ohos \"\$@\""
 
-# 写 clang++ wrapper
-cat > "$TOOLCHAIN_BIN/aarch64-unknown-linux-ohos-clang++" << WRAPPER_EOF
-#!/bin/bash
-exec /usr/bin/clang++-19 \\
-    --target=aarch64-linux-ohos \\
-    --sysroot=${SYSROOT_DIR} \\
-    --gcc-toolchain=${SYSROOT_DIR} \\
-    --resource-dir=${KMP_RESOURCE_DIR} \\
-    -fuse-ld=/usr/bin/ld.lld-19 \\
-    -stdlib=libc++ \\
-    -B${SYSROOT_DIR}/usr/lib/aarch64-linux-ohos \\
-    "\$@"
-WRAPPER_EOF
+WRAPPER_CLANGPP="#!/bin/bash
+exec /usr/bin/clang++-19 --target=aarch64-linux-ohos --sysroot=$SYSROOT_DIR --gcc-toolchain=$SYSROOT_DIR --resource-dir=$KMP_RESOURCE_DIR -fuse-ld=/usr/bin/ld.lld-19 -stdlib=libc++ -B$SYSROOT_DIR/usr/lib/aarch64-linux-ohos \"\$@\""
+
+echo "$WRAPPER_CLANG" > "$TOOLCHAIN_BIN/aarch64-unknown-linux-ohos-clang"
+echo "$WRAPPER_CLANGPP" > "$TOOLCHAIN_BIN/aarch64-unknown-linux-ohos-clang++"
+chmod +x "$TOOLCHAIN_BIN/aarch64-unknown-linux-ohos-clang"
 chmod +x "$TOOLCHAIN_BIN/aarch64-unknown-linux-ohos-clang++"
 
-echo "Wrappers created:"
+echo "Wrappers:"
 ls -la "$TOOLCHAIN_BIN/"
 
-# 验证
 echo ""
 echo "--- clang version ---"
 "$TOOLCHAIN_BIN/aarch64-unknown-linux-ohos-clang" --version | head -1
 
 echo ""
-echo "--- 测试编译 OHOS 动态链接二进制 ---"
+echo "--- test compile ---"
 echo 'int main() { return 0; }' > /tmp/test.c
 "$TOOLCHAIN_BIN/aarch64-unknown-linux-ohos-clang" /tmp/test.c -o /tmp/test_ohos 2>&1 | head -5
 if [ -f /tmp/test_ohos ]; then
     file /tmp/test_ohos
-    echo ""
-    echo "--- 动态库依赖 ---"
-    ldd /tmp/test_ohos 2>&1 || echo "(no ldd)"
-else
-    echo "❌ 编译失败"
-    exit 1
 fi
