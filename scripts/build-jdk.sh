@@ -46,7 +46,7 @@ echo ""
 echo "==== CONFIGURE ===="
 chmod +x configure 2>&1
 bash configure \
-    --openjdk-target=aarch64-linux-ohos \
+    --openjdk-target=aarch64-linux-gnu \
     --with-sysroot="${SYSROOT:-$(pwd)/../sysroot}" \
     --with-toolchain-path="$TOOLCHAIN_DIR/bin" \
     --with-extra-cflags="-O2 -fPIC -DOHOS_LINUX=1 -Wno-error" \
