@@ -1,0 +1,118 @@
+name: build-ohos-musl-jdk
+
+on:
+  workflow_dispatch:    # 手动触发，避免每次 push 都跑（30-60 分钟）
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/build-ohos-musl-jdk.yml'
+      - 'scripts/build-jdk.sh'
+      - 'scripts/verify-jdk.sh'
+
+jobs:
+  build-ohos-jdk:
+    # 用普通 x86_64 runner 跑 build，输出 aarch64-ohos-musl 静态 JDK
+    runs-on: ubuntu-24.04
+
+    timeout-minutes: 90   # OpenJDK 21 完整 build 30-60 分钟
+
+    env:
+      OHOS_SDK_VERSION: "5.0.5"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install OpenJDK 21 (boot JDK)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: 'none'
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            autoconf automake libtool pkg-config \
+            libx11-dev libxext-dev libxrender-dev libxtst-dev \
+            libxt-dev libcups2-dev libfreetype6-dev libasound2-dev \
+            zip unzip git curl wget
+
+      - name: Download OHOS NDK
+        run: |
+          echo "--- 下载 OHOS NDK 5.0.5 ---"
+          mkdir -p ohos-sdk
+          cd ohos-sdk
+          # 优先用华为云镜像（中国 runner 速度快）
+          NDK_URL="https://repo.huaweicloud.com/harmonyos/os/${OHOS_SDK_VERSION}/native-linux-x64-${OHOS_SDK_VERSION}-Release.zip"
+          echo "Trying: $NDK_URL"
+          wget -q --tries=3 --timeout=60 -O native.zip "$NDK_URL" || {
+            echo "Huawei Cloud 失败，尝试官方源"
+            NDK_URL="https://download.openharmony.cn/os/${OHOS_SDK_VERSION}/native-linux-x64-${OHOS_SDK_VERSION}-Release.zip"
+            wget -q --tries=3 --timeout=60 -O native.zip "$NDK_URL"
+          }
+          ls -lh native.zip
+          unzip -q native.zip
+          ls -la
+          echo ""
+          echo "--- 工具链路径 ---"
+          CLANG=$(find native -name "aarch64-unknown-linux-ohos-clang" -type f 2>/dev/null | head -1)
+          SYSROOT=$(find native -name "sysroot" -type d 2>/dev/null | head -1)
+          echo "CLANG:   $CLANG"
+          echo "SYSROOT: $SYSROOT"
+          echo ""
+
+          # 验证工具链
+          $CLANG --version
+          ls $SYSROOT/usr/include | head -5
+
+      - name: Build OHOS musl OpenJDK 21
+        run: |
+          chmod +x scripts/build-jdk.sh
+          export CC=$(find ohos-sdk -name "aarch64-linux-ohos-clang" -path "*/llvm/bin/*" 2>/dev/null | head -1)
+          export CXX=$(find ohos-sdk -name "aarch64-linux-ohos-clang++" -path "*/llvm/bin/*" 2>/dev/null | head -1)
+          export SYSROOT=$(find ohos-sdk -name "sysroot" -type d 2>/dev/null | head -1)
+          export OHOS_NDK_HOME=$(dirname $(dirname $CC))/..
+          echo "CC=$CC"
+          echo "CXX=$CXX"
+          echo "SYSROOT=$SYSROOT"
+          echo "OHOS_NDK_HOME=$OHOS_NDK_HOME"
+          bash scripts/build-jdk.sh 2>&1 | tail -100
+
+      - name: Upload JDK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ohos-musl-jdk-21-${{ github.sha }}
+          path: build-output/ohos-musl-jdk-21.tar.gz
+          retention-days: 30
+          if-no-files-found: error
+
+      - name: Upload verify script
+        uses: actions/upload-artifact@v4
+        with:
+          name: verify-jdk-script
+          path: scripts/verify-jdk.sh
+          retention-days: 30
+
+      - name: Print download info
+        if: success()
+        run: |
+          echo ""
+          echo "=========================================="
+          echo "✅ OHOS musl OpenJDK 21 build done!"
+          echo "=========================================="
+          echo ""
+          echo "下载: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          echo "Artifact: ohos-musl-jdk-21-${{ github.sha }}"
+          echo ""
+          echo "下一步："
+          echo "1. 下载 artifact"
+          echo "2. 解压到 Windows: C:\\Users\\25322\\Downloads\\ohos-musl-jdk\\"
+          echo "3. 推到鸿蒙 PC:"
+          echo "   hdc file send ohos-musl-jdk-21.tar.gz /data/local/tmp/"
+          echo "   hdc shell"
+          echo "   > cd /data/local/tmp && tar -xzf ohos-musl-jdk-21.tar.gz"
+          echo "   > chmod +x /data/local/tmp/boofcv_test/bin/java"
+          echo "   > /data/local/tmp/boofcv_test/bin/java -version"
+          echo "=========================================="
