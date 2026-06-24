@@ -30,24 +30,22 @@ for link_name in crtend.o crtendS.o crtendT.o; do
 done
 ln -sf "$KMP_LIBS/libclang_rt.builtins.a" "$SYSROOT_LIB_AARCH64/libclang_rt.builtins.a" || true
 
-# Wrapper: case 探测
+# Wrapper: 拦截探测 + log 所有调用
 cat > "$TOOLCHAIN_BIN/aarch64-unknown-linux-ohos-clang" << 'WRAPPER_EOF'
 #!/bin/bash
-# Hack: OpenJDK 探测 CC 时调 --version / -v / -dumpversion 等, 都返回 gcc
-for arg in "$@"; do
-    case "$arg" in
+# Log all invocations to debug OpenJDK probing
+echo "CC-INVOKE args=[$*] cwd=$(pwd)" >> /tmp/cc-invoke.log
+
+# 探测: 任何短调用 (1-3 args) 都返回 gcc (OpenJDK 探测)
+if [ "$#" -le 3 ]; then
+    case "$1" in
         --version|-v|-V|-dumpversion|-dumpfullversion|--help|-E|-dM)
             echo "gcc version 13.2.0 (Ubuntu 13.2.0-23ubuntu4)"
             exit 0
             ;;
     esac
-done
-# 检测: 如果 stdin 是 /dev/null 且只有一个 -c 之类, 也是探测
-if [ "$#" -le 2 ]; then
-    echo "gcc version 13.2.0 (Ubuntu 13.2.0-23ubuntu4)"
-    exit 0
 fi
-# 真正编译: 调用 clang
+# 真正编译
 exec /usr/bin/clang-19 \
     --target=aarch64-linux-ohos \
     --sysroot=SYSROOT_PLACEHOLDER \
@@ -61,17 +59,15 @@ chmod +x "$TOOLCHAIN_BIN/aarch64-unknown-linux-ohos-clang"
 
 cat > "$TOOLCHAIN_BIN/aarch64-unknown-linux-ohos-clang++" << 'WRAPPER_EOF'
 #!/bin/bash
-for arg in "$@"; do
-    case "$arg" in
+echo "CXX-INVOKE args=[$*] cwd=$(pwd)" >> /tmp/cxx-invoke.log
+
+if [ "$#" -le 3 ]; then
+    case "$1" in
         --version|-v|-V|-dumpversion|-dumpfullversion|--help|-E|-dM)
             echo "g++ version 13.2.0 (Ubuntu 13.2.0-23ubuntu4)"
             exit 0
             ;;
     esac
-done
-if [ "$#" -le 2 ]; then
-    echo "g++ version 13.2.0 (Ubuntu 13.2.0-23ubuntu4)"
-    exit 0
 fi
 exec /usr/bin/clang++-19 \
     --target=aarch64-linux-ohos \
@@ -86,14 +82,4 @@ sed -i "s|SYSROOT_PLACEHOLDER|$SYSROOT_DIR|g" "$TOOLCHAIN_BIN/aarch64-unknown-li
 chmod +x "$TOOLCHAIN_BIN/aarch64-unknown-linux-ohos-clang++"
 
 echo "Wrappers:"
-cat "$TOOLCHAIN_BIN/aarch64-unknown-linux-ohos-clang"
-echo "---"
 ls -la "$TOOLCHAIN_BIN/"
-
-echo ""
-echo "--- test --version ---"
-"$TOOLCHAIN_BIN/aarch64-unknown-linux-ohos-clang" --version
-
-echo ""
-echo "--- test -v ---"
-"$TOOLCHAIN_BIN/aarch64-unknown-linux-ohos-clang" -v 2>&1 | head -3
