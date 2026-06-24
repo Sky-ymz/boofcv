@@ -49,7 +49,7 @@ jobs:
           ls sysroot/usr/include | head -5
 
           echo ""
-          echo "--- 创建 clang wrapper ---"
+          echo "--- 创建 clang wrapper (动态链接模式) ---"
           chmod +x scripts/setup-ohos-toolchain.sh
           bash scripts/setup-ohos-toolchain.sh "$(pwd)/sysroot" "$(pwd)/toolchain/bin"
 
@@ -58,7 +58,7 @@ jobs:
           echo "SYSROOT=$(pwd)/sysroot" >> $GITHUB_ENV
           echo "TOOLCHAIN_DIR=$(pwd)/toolchain" >> $GITHUB_ENV
 
-      - name: Build OHOS musl OpenJDK 21
+      - name: Build OHOS OpenJDK 21 (dynamic link)
         run: |
           chmod +x scripts/build-jdk.sh
           bash scripts/build-jdk.sh 2>&1 | tail -100
@@ -66,8 +66,8 @@ jobs:
       - name: Upload JDK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ohos-musl-jdk-21-${{ github.sha }}
-          path: build-output/ohos-musl-jdk-21.tar.gz
+          name: ohos-jdk-21-dynamic-${{ github.sha }}
+          path: build-output/ohos-jdk-21-dynamic.tar.gz
           retention-days: 30
           if-no-files-found: error
 
@@ -82,8 +82,8 @@ jobs:
         if: success()
         run: |
           echo "=========================================="
-          echo "OHOS musl OpenJDK 21 build done!"
+          echo "OHOS OpenJDK 21 build done!"
           echo "Download: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          echo "Artifact: ohos-musl-jdk-21-${{ github.sha }}"
+          echo "Artifact: ohos-jdk-21-dynamic-${{ github.sha }}"
           echo "Next: download, push to HarmonyOS PC, run java -version"
           echo "=========================================="
