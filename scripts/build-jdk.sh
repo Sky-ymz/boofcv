@@ -1,7 +1,7 @@
 #!/bin/bash
 # 用 LLVM 19 + OHOS sysroot 交叉编译 OpenJDK 21 (DYNAMIC LINK)
-# OHOS 默认动态链接，所以不用 -static
-set -euo pipefail
+# 不用 set -e 让所有 log 输出
+set -uo pipefail
 
 JDK_REPO="${JDK_REPO:-https://github.com/openjdk/jdk21u.git}"
 JDK_TAG="${JDK_TAG:-jdk-21.0.2}"
@@ -22,17 +22,18 @@ echo "CXX:           $CXX"
 echo "SYSROOT:       $SYSROOT"
 echo "JDK_TAG:       $JDK_TAG"
 echo "JOBS:          $JOBS"
+echo "OUTPUT_DIR:    $OUTPUT_DIR"
 echo "=========================================="
 
 # 1. 验证工具链
 if [ ! -x "$CC" ]; then
-    echo "❌ ERROR: clang not found at $CC"
+    echo "ERROR: clang not found at $CC" >&2
     exit 1
 fi
 
 # 2. 验证工具链能跑
 echo "--- 验证 clang ---"
-$CC --version
+"$CC" --version
 echo ""
 
 # 3. 克隆 OpenJDK 21 源码
@@ -43,11 +44,7 @@ fi
 
 cd jdk21u
 
-# 4. Configure OpenJDK build
-# 关键修改：
-# - 去掉 -static (OHOS 动态链接)
-# - 去掉 -rtlib=compiler-rt (用 OHOS 自带 libgcc)
-# - 加 --with-toolchain-path 让 configure 找到 ld.lld-19
+# 4. Configure
 echo "--- 配置 OpenJDK build ---"
 chmod +x configure
 
@@ -61,25 +58,29 @@ bash configure \
     --disable-hotspot-gc-z \
     --disable-jvm-feature-shenandoahgc \
     --disable-hotspot-gc-parallel \
-    --with-jvm-variants=server,core \
+    --with-jvm-variants=core \
     --disable-warnings-as-errors \
     --with-boot-jdk="$JAVA_HOME" \
-    2>&1 | tee configure.log
+    > configure.log 2>&1
 
-if [ ${PIPESTATUS[0]} -ne 0 ]; then
-    echo "❌ configure 失败，查看 configure.log"
-    tail -80 configure.log
+CONFIGURE_RC=$?
+if [ $CONFIGURE_RC -ne 0 ]; then
+    echo "ERROR: configure failed, exit code: $CONFIGURE_RC"
+    tail -100 configure.log
     exit 2
 fi
+echo "configure OK"
 
 # 5. Build
 echo "--- 开始 build (JOBS=$JOBS) ---"
 echo "预计 30-60 分钟..."
 
-make images JOBS=$JOBS 2>&1 | tee build.log
+make images JOBS=$JOBS > build.log 2>&1
+BUILD_RC=$?
 
-if [ ${PIPESTATUS[0]} -ne 0 ]; then
-    echo "❌ build 失败，查看 build.log"
+echo "build exit code: $BUILD_RC"
+if [ $BUILD_RC -ne 0 ]; then
+    echo "ERROR: build failed"
     tail -200 build.log
     exit 3
 fi
@@ -88,13 +89,19 @@ fi
 echo "--- 拷贝产物 ---"
 mkdir -p "$OUTPUT_DIR"
 
+echo "--- 查找产物 ---"
+echo "PWD: $(pwd)"
+ls -la build/ 2>&1 | head -10
+echo "--- find images/jdk ---"
+find build -path "*/images/jdk" -type d 2>&1
+echo "--- find java ---"
+find build -name "java" -type f 2>&1 | head -5
+
 JDK_BUILD_DIR=$(find build -maxdepth 4 -path "*/images/jdk" -type d 2>/dev/null | head -1)
 if [ -z "$JDK_BUILD_DIR" ]; then
-    # 备选
     JAVA_BIN=$(find build -name "java" -type f -executable 2>/dev/null | head -1)
     if [ -z "$JAVA_BIN" ]; then
-        echo "❌ 找不到编译产物 java"
-        find build -name "java" 2>&1 | head -5
+        echo "ERROR: 找不到编译产物 java"
         exit 4
     fi
     JDK_BUILD_DIR=$(dirname $(dirname "$JAVA_BIN"))
@@ -117,6 +124,6 @@ ls -lh ohos-jdk-21-dynamic.tar.gz
 
 echo ""
 echo "=========================================="
-echo "✅ 编译完成！"
-echo "产物: $OUTPUT_DIR/ohos-jdk-21-dynamic.tar.gz"
+echo "OK: build done"
+echo "Output: $OUTPUT_DIR/ohos-jdk-21-dynamic.tar.gz"
 echo "=========================================="
