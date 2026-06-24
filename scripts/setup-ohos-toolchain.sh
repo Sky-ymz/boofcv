@@ -1,5 +1,6 @@
 #!/bin/bash
 # Setup OHOS toolchain wrappers (dynamic link)
+# 直接用 printf -v 写 wrapper (单行 exec)
 set -euo pipefail
 
 SYSROOT_DIR="$1"
@@ -18,15 +19,15 @@ fi
 
 mkdir -p "$TOOLCHAIN_BIN"
 
-# 写 wrapper (一行 exec, 避免续行)
-WRAPPER_CLANG="#!/bin/bash
-exec /usr/bin/clang-19 --target=aarch64-linux-ohos --sysroot=$SYSROOT_DIR --gcc-toolchain=$SYSROOT_DIR --resource-dir=$KMP_RESOURCE_DIR -fuse-ld=/usr/bin/ld.lld-19 -B$SYSROOT_DIR/usr/lib/aarch64-linux-ohos \"\$@\""
+# 用 printf 写单行 wrapper (避免变量展开成多行)
+printf '#!/bin/bash\nexec /usr/bin/clang-19 --target=aarch64-linux-ohos --sysroot=%s --gcc-toolchain=%s --resource-dir=%s -fuse-ld=/usr/bin/ld.lld-19 -B%s/usr/lib/aarch64-linux-ohos "$@"\n' \
+    "$SYSROOT_DIR" "$SYSROOT_DIR" "$KMP_RESOURCE_DIR" "$SYSROOT_DIR" \
+    > "$TOOLCHAIN_BIN/aarch64-unknown-linux-ohos-clang"
 
-WRAPPER_CLANGPP="#!/bin/bash
-exec /usr/bin/clang++-19 --target=aarch64-linux-ohos --sysroot=$SYSROOT_DIR --gcc-toolchain=$SYSROOT_DIR --resource-dir=$KMP_RESOURCE_DIR -fuse-ld=/usr/bin/ld.lld-19 -stdlib=libc++ -B$SYSROOT_DIR/usr/lib/aarch64-linux-ohos \"\$@\""
+printf '#!/bin/bash\nexec /usr/bin/clang++-19 --target=aarch64-linux-ohos --sysroot=%s --gcc-toolchain=%s --resource-dir=%s -fuse-ld=/usr/bin/ld.lld-19 -stdlib=libc++ -B%s/usr/lib/aarch64-linux-ohos "$@"\n' \
+    "$SYSROOT_DIR" "$SYSROOT_DIR" "$KMP_RESOURCE_DIR" "$SYSROOT_DIR" \
+    > "$TOOLCHAIN_BIN/aarch64-unknown-linux-ohos-clang++"
 
-echo "$WRAPPER_CLANG" > "$TOOLCHAIN_BIN/aarch64-unknown-linux-ohos-clang"
-echo "$WRAPPER_CLANGPP" > "$TOOLCHAIN_BIN/aarch64-unknown-linux-ohos-clang++"
 chmod +x "$TOOLCHAIN_BIN/aarch64-unknown-linux-ohos-clang"
 chmod +x "$TOOLCHAIN_BIN/aarch64-unknown-linux-ohos-clang++"
 
@@ -39,7 +40,7 @@ echo "--- clang version ---"
 
 echo ""
 echo "--- test compile ---"
-echo 'int main() { return 0; }' > /tmp/test.c
+printf 'int main() { return 0; }\n' > /tmp/test.c
 "$TOOLCHAIN_BIN/aarch64-unknown-linux-ohos-clang" /tmp/test.c -o /tmp/test_ohos 2>&1 | head -5
 if [ -f /tmp/test_ohos ]; then
     file /tmp/test_ohos
