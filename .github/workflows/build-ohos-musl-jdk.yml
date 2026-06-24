@@ -8,15 +8,13 @@ on:
       - '.github/workflows/build-ohos-musl-jdk.yml'
       - 'scripts/build-jdk.sh'
       - 'scripts/verify-jdk.sh'
+      - 'sysroot-ohos.tar.gz'
 
 jobs:
   build-ohos-jdk:
-    # 用普通 x86_64 runner 装 LLVM 19 (apt) + OHOS sysroot (release 下载，66MB)
+    # 用普通 x86_64 runner：apt 装 LLVM 19 + 本地 repo sysroot (12MB)
     runs-on: ubuntu-24.04
     timeout-minutes: 90
-
-    env:
-      OHOS_SYSROOT_VERSION: "1.0.0"
 
     steps:
       - name: Checkout
@@ -30,7 +28,7 @@ jobs:
 
       - name: Install LLVM 19 + build deps
         run: |
-          echo "--- 装 LLVM 19 + OpenJDK build deps ---"
+          echo "--- 装 LLVM 19 ---"
           wget -qO- https://apt.llvm.org/llvm-snapshot.gpg.key | sudo tee /etc/apt/trusted.gpg.d/apt.llvm.org.asc > /dev/null
           echo "deb http://apt.llvm.org/noble/ llvm-toolchain-noble-19 main" | sudo tee /etc/apt/sources.list.d/llvm-19.list
           sudo apt-get update
@@ -42,72 +40,57 @@ jobs:
           echo ""
           echo "--- 验证 clang ---"
           clang-19 --version
-          ld.lld-19 --version | head -2
+          ld.lld-19 --version | head -1
 
-      - name: Download OHOS sysroot (66 MB)
-        # OHOS sysroot 单独打包（不含 LLVM 工具链），体积小
-        # 来源：boofcv repo release
+      - name: Extract OHOS sysroot + create clang wrappers
+        # 12 MB sysroot 已在 repo 内 (sysroot-ohos.tar.gz)
         run: |
-          echo "--- 下载 OHOS aarch64 sysroot (66MB) ---"
-          mkdir -p sysroot
-          cd sysroot
-          # 从 boofcv release 下载 sysroot（之前你提的 KMP 用的）
-          SYSROOT_URL="https://github.com/Sky-ymz/boofcv/releases/download/ohos-sysroot-1.0.0/ohos-sysroot-aarch64-6.0.2.640-04.tar.gz"
-          wget -q --tries=3 --timeout=120 -O sysroot.tar.gz "$SYSROOT_URL" || {
-            echo "❌ OHOS sysroot 未上传到 release"
-            echo "   请先在本地 WSL 端打包:"
-            echo "   cd /home/ymz/.konan/dependencies/sysroot-ohos-aarch64-6.0.2.640-04"
-            echo "   tar -czf ohos-sysroot-aarch64-6.0.2.640-04.tar.gz ."
-            echo "   gh release create ohos-sysroot-1.0.0 ohos-sysroot-aarch64-6.0.2.640-04.tar.gz"
-            exit 5
-          }
-          ls -lh
-          tar -xzf sysroot.tar.gz
-          ls -la
-          cd ..
+          echo "--- 解压 OHOS sysroot ---"
+          mkdir -p sysroot toolchain/bin
+          tar -xzf sysroot-ohos.tar.gz -C sysroot
+          ls sysroot/usr/include | head -5
+          SYSROOT_DIR=$(pwd)/sysroot
 
-          SYSROOT_DIR=$(pwd)/sysroot/sysroot
-          echo "SYSROOT_DIR: $SYSROOT_DIR"
-          if [ -d "$SYSROOT_DIR/usr/include" ]; then
-            ls $SYSROOT_DIR/usr/include | head -5
-          fi
-
-          # 找 clang wrapper（需要包装成 aarch64-unknown-linux-ohos-clang）
-          mkdir -p toolchain/bin
-          cat > toolchain/bin/aarch64-unknown-linux-ohos-clang << EOF
+          # 创建 OHOS 工具链 wrapper（apt clang-19 + sysroot + lld）
+          cat > toolchain/bin/aarch64-unknown-linux-ohos-clang << 'EOF'
 #!/bin/bash
-exec clang-19 \\
-    --target=aarch64-linux-ohos \\
-    --sysroot=$SYSROOT_DIR \\
-    --gcc-toolchain=$SYSROOT_DIR \\
-    -fuse-ld=lld-19 \\
-    "\$@"
+exec /usr/bin/clang-19 \
+    --target=aarch64-linux-ohos \
+    --sysroot='$SYSROOT_DIR' \
+    --gcc-toolchain='$SYSROOT_DIR' \
+    -fuse-ld=/usr/bin/ld.lld-19 \
+    -rtlib=compiler-rt \
+    "$@"
 EOF
+          sed -i "s|\$SYSROOT_DIR|$SYSROOT_DIR|g" toolchain/bin/aarch64-unknown-linux-ohos-clang
           chmod +x toolchain/bin/aarch64-unknown-linux-ohos-clang
-          cat > toolchain/bin/aarch64-unknown-linux-ohos-clang++ << EOF
+
+          cat > toolchain/bin/aarch64-unknown-linux-ohos-clang++ << 'EOF'
 #!/bin/bash
-exec clang-19 \\
-    --target=aarch64-linux-ohos \\
-    --sysroot=$SYSROOT_DIR \\
-    --gcc-toolchain=$SYSROOT_DIR \\
-    -fuse-ld=lld-19 \\
-    -stdlib=libc++ \\
-    "\$@"
+exec /usr/bin/clang++-19 \
+    --target=aarch64-linux-ohos \
+    --sysroot='$SYSROOT_DIR' \
+    --gcc-toolchain='$SYSROOT_DIR' \
+    -fuse-ld=/usr/bin/ld.lld-19 \
+    -stdlib=libc++ \
+    -rtlib=compiler-rt \
+    "$@"
 EOF
+          sed -i "s|\$SYSROOT_DIR|$SYSROOT_DIR|g" toolchain/bin/aarch64-unknown-linux-ohos-clang++
           chmod +x toolchain/bin/aarch64-unknown-linux-ohos-clang++
 
+          echo ""
           echo "--- 验证 wrapper ---"
           toolchain/bin/aarch64-unknown-linux-ohos-clang --version | head -1
-          echo ""
-          echo '--- 测试编译 OHOS 二进制 ---'
           echo 'int main() { return 0; }' > /tmp/test.c
-          toolchain/bin/aarch64-unknown-linux-ohos-clang -static /tmp/test.c -o /tmp/test_ohos
-          file /tmp/test_ohos
+          toolchain/bin/aarch64-unknown-linux-ohos-clang -static /tmp/test.c -o /tmp/test_ohos 2>&1
+          file /tmp/test_ohos 2>&1 | head -1
 
           # 写到 env
           echo "CC=$(pwd)/toolchain/bin/aarch64-unknown-linux-ohos-clang" >> $GITHUB_ENV
           echo "CXX=$(pwd)/toolchain/bin/aarch64-unknown-linux-ohos-clang++" >> $GITHUB_ENV
           echo "SYSROOT=$SYSROOT_DIR" >> $GITHUB_ENV
+          echo "TOOLCHAIN_DIR=$(pwd)/toolchain" >> $GITHUB_ENV
 
       - name: Build OHOS musl OpenJDK 21
         run: |
