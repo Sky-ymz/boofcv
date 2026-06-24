@@ -12,7 +12,6 @@ on:
 
 jobs:
   build-ohos-jdk:
-    # 用普通 x86_64 runner：apt 装 LLVM 19 + 本地 repo sysroot (12MB)
     runs-on: ubuntu-24.04
     timeout-minutes: 90
 
@@ -44,6 +43,7 @@ jobs:
 
       - name: Extract OHOS sysroot + create clang wrappers
         # 12 MB sysroot 已在 repo 内 (sysroot-ohos.tar.gz)
+        # 用 Python heredoc 避免 YAML 解析问题
         run: |
           echo "--- 解压 OHOS sysroot ---"
           mkdir -p sysroot toolchain/bin
@@ -51,39 +51,43 @@ jobs:
           ls sysroot/usr/include | head -5
           SYSROOT_DIR=$(pwd)/sysroot
 
-          # 创建 OHOS 工具链 wrapper（apt clang-19 + sysroot + lld）
-          cat > toolchain/bin/aarch64-unknown-linux-ohos-clang << 'EOF'
-#!/bin/bash
-exec /usr/bin/clang-19 \
-    --target=aarch64-linux-ohos \
-    --sysroot='$SYSROOT_DIR' \
-    --gcc-toolchain='$SYSROOT_DIR' \
-    -fuse-ld=/usr/bin/ld.lld-19 \
-    -rtlib=compiler-rt \
-    "$@"
-EOF
-          sed -i "s|\$SYSROOT_DIR|$SYSROOT_DIR|g" toolchain/bin/aarch64-unknown-linux-ohos-clang
-          chmod +x toolchain/bin/aarch64-unknown-linux-ohos-clang
-
-          cat > toolchain/bin/aarch64-unknown-linux-ohos-clang++ << 'EOF'
-#!/bin/bash
-exec /usr/bin/clang++-19 \
-    --target=aarch64-linux-ohos \
-    --sysroot='$SYSROOT_DIR' \
-    --gcc-toolchain='$SYSROOT_DIR' \
-    -fuse-ld=/usr/bin/ld.lld-19 \
-    -stdlib=libc++ \
-    -rtlib=compiler-rt \
-    "$@"
-EOF
-          sed -i "s|\$SYSROOT_DIR|$SYSROOT_DIR|g" toolchain/bin/aarch64-unknown-linux-ohos-clang++
-          chmod +x toolchain/bin/aarch64-unknown-linux-ohos-clang++
-
+          # 用 python heredoc 写 wrapper (避免 YAML 解析问题)
+          python3 -c "
+import os
+sysroot = os.environ['SYSROOT_DIR']
+wrapper_c = '''#!/bin/bash
+exec /usr/bin/clang-19 \\
+    --target=aarch64-linux-ohos \\
+    --sysroot=''' + sysroot + ''' \\
+    --gcc-toolchain=''' + sysroot + ''' \\
+    -fuse-ld=/usr/bin/ld.lld-19 \\
+    -rtlib=compiler-rt \\
+    \"\$@\"
+'''
+with open('toolchain/bin/aarch64-unknown-linux-ohos-clang', 'w') as f:
+    f.write(wrapper_c)
+os.chmod('toolchain/bin/aarch64-unknown-linux-ohos-clang', 0o755)
+wrapper_cxx = '''#!/bin/bash
+exec /usr/bin/clang++-19 \\
+    --target=aarch64-linux-ohos \\
+    --sysroot=''' + sysroot + ''' \\
+    --gcc-toolchain=''' + sysroot + ''' \\
+    -fuse-ld=/usr/bin/ld.lld-19 \\
+    -stdlib=libc++ \\
+    -rtlib=compiler-rt \\
+    \"\$@\"
+'''
+with open('toolchain/bin/aarch64-unknown-linux-ohos-clang++', 'w') as f:
+    f.write(wrapper_cxx)
+os.chmod('toolchain/bin/aarch64-unknown-linux-ohos-clang++', 0o755)
+print('Wrappers created')
+"
+          export SYSROOT_DIR
           echo ""
           echo "--- 验证 wrapper ---"
           toolchain/bin/aarch64-unknown-linux-ohos-clang --version | head -1
           echo 'int main() { return 0; }' > /tmp/test.c
-          toolchain/bin/aarch64-unknown-linux-ohos-clang -static /tmp/test.c -o /tmp/test_ohos 2>&1
+          toolchain/bin/aarch64-unknown-linux-ohos-clang -static /tmp/test.c -o /tmp/test_ohos 2>&1 | head -5
           file /tmp/test_ohos 2>&1 | head -1
 
           # 写到 env
