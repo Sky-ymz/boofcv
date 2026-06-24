@@ -52,9 +52,7 @@ bash configure \
     --with-extra-cflags="-O2 -fPIC -DOHOS_LINUX=1 -Wno-error" \
     --with-extra-cxxflags="-O2 -fPIC -stdlib=libc++ -Wno-error" \
     --with-extra-ldflags="-stdlib=libc++ -lm -lpthread -lc++ -lc++abi -L${SYSROOT:-$(pwd)/../sysroot}/usr/lib/aarch64-linux-ohos" \
-    --disable-hotspot-gc-z \
     --disable-jvm-feature-shenandoahgc \
-    --disable-hotspot-gc-parallel \
     --with-jvm-variants=core \
     --disable-warnings-as-errors \
     --with-boot-jdk="$JAVA_HOME" \
