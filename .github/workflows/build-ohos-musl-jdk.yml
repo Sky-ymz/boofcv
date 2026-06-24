@@ -10,6 +10,7 @@ on:
       - 'scripts/verify-jdk.sh'
       - 'scripts/setup-ohos-toolchain.sh'
       - 'sysroot-ohos.tar.gz'
+      - 'ohos-crt.tar.gz'
 
 jobs:
   build-ohos-jdk:
@@ -41,17 +42,20 @@ jobs:
           clang-19 --version
           ld.lld-19 --version | head -1
 
-      - name: Extract OHOS sysroot + setup toolchain
+      - name: Extract OHOS sysroot + crt + setup toolchain
         run: |
           echo "--- 解压 OHOS sysroot (12MB) ---"
-          mkdir -p sysroot toolchain
+          mkdir -p sysroot toolchain crt
           tar -xzf sysroot-ohos.tar.gz -C sysroot
-          ls sysroot/usr/include | head -5
+
+          echo "--- 解压 OHOS crt (59KB: crtbegin/crtend/builtins) ---"
+          tar -xzf ohos-crt.tar.gz -C crt
+          ls crt/
 
           echo ""
-          echo "--- 创建 clang wrapper (动态链接模式) ---"
+          echo "--- 创建 clang wrapper ---"
           chmod +x scripts/setup-ohos-toolchain.sh
-          bash scripts/setup-ohos-toolchain.sh "$(pwd)/sysroot" "$(pwd)/toolchain/bin"
+          bash scripts/setup-ohos-toolchain.sh "$(pwd)/sysroot" "$(pwd)/toolchain/bin" "$(pwd)/crt"
 
           echo "CC=$(pwd)/toolchain/bin/aarch64-unknown-linux-ohos-clang" >> $GITHUB_ENV
           echo "CXX=$(pwd)/toolchain/bin/aarch64-unknown-linux-ohos-clang++" >> $GITHUB_ENV
