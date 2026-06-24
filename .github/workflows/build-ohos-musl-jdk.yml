@@ -48,7 +48,7 @@ jobs:
           mkdir -p sysroot toolchain kmp-resource
           tar -xzf sysroot-ohos.tar.gz -C sysroot
 
-          echo "--- 解压 KMP clang aarch64-ohos resource (11MB: crtbegin/crtend/builtins) ---"
+          echo "--- 解压 KMP clang aarch64-ohos resource (11MB) ---"
           tar -xzf kmp-clang-resource.tar.gz -C kmp-resource
           ls kmp-resource/lib/aarch64-linux-ohos/ | head -5
 
@@ -63,15 +63,27 @@ jobs:
           echo "TOOLCHAIN_DIR=$(pwd)/toolchain" >> $GITHUB_ENV
 
       - name: Build OHOS OpenJDK 21 (dynamic link)
+        # 不要用 tail 截断! 让所有 log 都显示
         run: |
           chmod +x scripts/build-jdk.sh
-          bash scripts/build-jdk.sh 2>&1 | tail -100
+          # 重定向到文件 + 显示末尾 + 保存到 log artifact
+          bash scripts/build-jdk.sh 2>&1 | tee build-jdk-output.log
+          echo "--- BUILD-JDK EXIT: ${PIPESTATUS[0]} ---"
+
+      - name: Upload build log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-jdk-log-${{ github.sha }}
+          path: build-jdk-output.log
+          retention-days: 7
+          if-no-files-found: ignore
 
       - name: Upload JDK artifact
         uses: actions/upload-artifact@v4
         with:
           name: ohos-jdk-21-dynamic-${{ github.sha }}
-          path: build-output/ohos-jdk-21-dynamic.tar.gz
+          path: ${{ env.GITHUB_WORKSPACE }}/build-output/ohos-jdk-21-dynamic.tar.gz
           retention-days: 30
           if-no-files-found: error
 
@@ -89,5 +101,4 @@ jobs:
           echo "OHOS OpenJDK 21 build done!"
           echo "Download: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           echo "Artifact: ohos-jdk-21-dynamic-${{ github.sha }}"
-          echo "Next: download, push to HarmonyOS PC, run java -version"
           echo "=========================================="
