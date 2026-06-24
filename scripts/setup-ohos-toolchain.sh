@@ -1,7 +1,5 @@
 #!/bin/bash
 # Setup OHOS toolchain wrappers
-# 关键: OpenJDK 21 要求 CC 报家门 'gcc' (default check)
-# 我们用 --version hack 让 clang 自报 gcc
 set -uo pipefail
 
 SYSROOT_DIR="$1"
@@ -32,32 +30,57 @@ for link_name in crtend.o crtendS.o crtendT.o; do
 done
 ln -sf "$KMP_LIBS/libclang_rt.builtins.a" "$SYSROOT_LIB_AARCH64/libclang_rt.builtins.a" || true
 
-# Wrapper: 用 sed 替换 --version 输出, 让 clang 自报 'gcc'
-# OpenJDK 21 探测 CC: $CC --version, 期望输出包含 'gcc' (或 'clang' 在新版)
-# 用 hack wrapper 让 --version 输出包含 'gcc' 关键字
+# Wrapper: case 探测
 cat > "$TOOLCHAIN_BIN/aarch64-unknown-linux-ohos-clang" << 'WRAPPER_EOF'
 #!/bin/bash
-# 如果是 --version 调用, 输出伪 gcc 版本
-if [ "$1" = "--version" ]; then
+# Hack: OpenJDK 探测 CC 时调 --version / -v / -dumpversion 等, 都返回 gcc
+for arg in "$@"; do
+    case "$arg" in
+        --version|-v|-V|-dumpversion|-dumpfullversion|--help|-E|-dM)
+            echo "gcc version 13.2.0 (Ubuntu 13.2.0-23ubuntu4)"
+            exit 0
+            ;;
+    esac
+done
+# 检测: 如果 stdin 是 /dev/null 且只有一个 -c 之类, 也是探测
+if [ "$#" -le 2 ]; then
     echo "gcc version 13.2.0 (Ubuntu 13.2.0-23ubuntu4)"
     exit 0
 fi
-# 否则正常调用 clang
-exec /usr/bin/clang-19 --target=aarch64-linux-ohos --sysroot=SYSROOT_PLACEHOLDER --gcc-toolchain=SYSROOT_PLACEHOLDER -fuse-ld=/usr/bin/ld.lld-19 -BSYSROOT_PLACEHOLDER/usr/lib/aarch64-linux-ohos "$@"
+# 真正编译: 调用 clang
+exec /usr/bin/clang-19 \
+    --target=aarch64-linux-ohos \
+    --sysroot=SYSROOT_PLACEHOLDER \
+    --gcc-toolchain=SYSROOT_PLACEHOLDER \
+    -fuse-ld=/usr/bin/ld.lld-19 \
+    -BSYSROOT_PLACEHOLDER/usr/lib/aarch64-linux-ohos \
+    "$@"
 WRAPPER_EOF
-
-# 用 sed 替换 SYSROOT_PLACEHOLDER
 sed -i "s|SYSROOT_PLACEHOLDER|$SYSROOT_DIR|g" "$TOOLCHAIN_BIN/aarch64-unknown-linux-ohos-clang"
 chmod +x "$TOOLCHAIN_BIN/aarch64-unknown-linux-ohos-clang"
 
-# clang++ wrapper (同样 hack)
 cat > "$TOOLCHAIN_BIN/aarch64-unknown-linux-ohos-clang++" << 'WRAPPER_EOF'
 #!/bin/bash
-if [ "$1" = "--version" ]; then
+for arg in "$@"; do
+    case "$arg" in
+        --version|-v|-V|-dumpversion|-dumpfullversion|--help|-E|-dM)
+            echo "g++ version 13.2.0 (Ubuntu 13.2.0-23ubuntu4)"
+            exit 0
+            ;;
+    esac
+done
+if [ "$#" -le 2 ]; then
     echo "g++ version 13.2.0 (Ubuntu 13.2.0-23ubuntu4)"
     exit 0
 fi
-exec /usr/bin/clang++-19 --target=aarch64-linux-ohos --sysroot=SYSROOT_PLACEHOLDER --gcc-toolchain=SYSROOT_PLACEHOLDER -fuse-ld=/usr/bin/ld.lld-19 -stdlib=libc++ -BSYSROOT_PLACEHOLDER/usr/lib/aarch64-linux-ohos "$@"
+exec /usr/bin/clang++-19 \
+    --target=aarch64-linux-ohos \
+    --sysroot=SYSROOT_PLACEHOLDER \
+    --gcc-toolchain=SYSROOT_PLACEHOLDER \
+    -fuse-ld=/usr/bin/ld.lld-19 \
+    -stdlib=libc++ \
+    -BSYSROOT_PLACEHOLDER/usr/lib/aarch64-linux-ohos \
+    "$@"
 WRAPPER_EOF
 sed -i "s|SYSROOT_PLACEHOLDER|$SYSROOT_DIR|g" "$TOOLCHAIN_BIN/aarch64-unknown-linux-ohos-clang++"
 chmod +x "$TOOLCHAIN_BIN/aarch64-unknown-linux-ohos-clang++"
@@ -68,7 +91,9 @@ echo "---"
 ls -la "$TOOLCHAIN_BIN/"
 
 echo ""
-echo "--- test --version (should report gcc) ---"
-"$TOOLCHAIN_BIN/aarch64-unknown-linux-ohos-clang" --version | head -1
+echo "--- test --version ---"
+"$TOOLCHAIN_BIN/aarch64-unknown-linux-ohos-clang" --version
+
 echo ""
-"$TOOLCHAIN_BIN/aarch64-unknown-linux-ohos-clang++" --version | head -1
+echo "--- test -v ---"
+"$TOOLCHAIN_BIN/aarch64-unknown-linux-ohos-clang" -v 2>&1 | head -3
