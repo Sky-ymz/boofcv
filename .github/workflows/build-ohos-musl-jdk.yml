@@ -28,7 +28,7 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '21'
-          cache: 'none'
+          # cache: 'maven'  # disable cache (OpenJDK build 不需要 Maven)
 
       - name: Install build dependencies
         run: |
