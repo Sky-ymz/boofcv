@@ -1,6 +1,6 @@
 #!/bin/bash
-# Setup OHOS toolchain wrappers (dynamic link)
-# 直接用 printf -v 写 wrapper (单行 exec)
+# Setup OHOS toolchain wrappers (dynamic link, no --resource-dir)
+# 关键: 在 sysroot 内创建 crtbegin/crtend 软链接
 set -euo pipefail
 
 SYSROOT_DIR="$1"
@@ -19,18 +19,38 @@ fi
 
 mkdir -p "$TOOLCHAIN_BIN"
 
-# 用 printf 写单行 wrapper (避免变量展开成多行)
-printf '#!/bin/bash\nexec /usr/bin/clang-19 --target=aarch64-linux-ohos --sysroot=%s --gcc-toolchain=%s --resource-dir=%s -fuse-ld=/usr/bin/ld.lld-19 -B%s/usr/lib/aarch64-linux-ohos "$@"\n' \
-    "$SYSROOT_DIR" "$SYSROOT_DIR" "$KMP_RESOURCE_DIR" "$SYSROOT_DIR" \
+SYSROOT_LIB_AARCH64="$SYSROOT_DIR/usr/lib/aarch64-linux-ohos"
+KMP_LIBS="$KMP_RESOURCE_DIR/lib/aarch64-linux-ohos"
+
+# 软链 crtbegin.o -> clang_rt.crtbegin.o
+for link_name in crtbegin.o crtbeginS.o crtbeginT.o; do
+    ln -sf "$KMP_LIBS/clang_rt.crtbegin.o" "$SYSROOT_LIB_AARCH64/$link_name" 2>/dev/null || true
+done
+
+# 软链 crtend.o -> clang_rt.crtend.o
+for link_name in crtend.o crtendS.o crtendT.o; do
+    ln -sf "$KMP_LIBS/clang_rt.crtend.o" "$SYSROOT_LIB_AARCH64/$link_name" 2>/dev/null || true
+done
+
+# 软链 libclang_rt.builtins.a
+ln -sf "$KMP_LIBS/libclang_rt.builtins.a" "$SYSROOT_LIB_AARCH64/libclang_rt.builtins.a" 2>/dev/null || true
+
+# Wrapper
+printf '#!/bin/bash\nexec /usr/bin/clang-19 --target=aarch64-linux-ohos --sysroot=%s --gcc-toolchain=%s -fuse-ld=/usr/bin/ld.lld-19 -B%s/usr/lib/aarch64-linux-ohos "$@"\n' \
+    "$SYSROOT_DIR" "$SYSROOT_DIR" "$SYSROOT_DIR" \
     > "$TOOLCHAIN_BIN/aarch64-unknown-linux-ohos-clang"
 
-printf '#!/bin/bash\nexec /usr/bin/clang++-19 --target=aarch64-linux-ohos --sysroot=%s --gcc-toolchain=%s --resource-dir=%s -fuse-ld=/usr/bin/ld.lld-19 -stdlib=libc++ -B%s/usr/lib/aarch64-linux-ohos "$@"\n' \
-    "$SYSROOT_DIR" "$SYSROOT_DIR" "$KMP_RESOURCE_DIR" "$SYSROOT_DIR" \
+printf '#!/bin/bash\nexec /usr/bin/clang++-19 --target=aarch64-linux-ohos --sysroot=%s --gcc-toolchain=%s -fuse-ld=/usr/bin/ld.lld-19 -stdlib=libc++ -B%s/usr/lib/aarch64-linux-ohos "$@"\n' \
+    "$SYSROOT_DIR" "$SYSROOT_DIR" "$SYSROOT_DIR" \
     > "$TOOLCHAIN_BIN/aarch64-unknown-linux-ohos-clang++"
 
 chmod +x "$TOOLCHAIN_BIN/aarch64-unknown-linux-ohos-clang"
 chmod +x "$TOOLCHAIN_BIN/aarch64-unknown-linux-ohos-clang++"
 
+echo "Soft links:"
+ls -la "$SYSROOT_LIB_AARCH64/crtbegin*.o" "$SYSROOT_LIB_AARCH64/crtend*.o" "$SYSROOT_LIB_AARCH64/libclang*" 2>&1 | head -10
+
+echo ""
 echo "Wrappers:"
 ls -la "$TOOLCHAIN_BIN/"
 
@@ -41,7 +61,7 @@ echo "--- clang version ---"
 echo ""
 echo "--- test compile ---"
 printf 'int main() { return 0; }\n' > /tmp/test.c
-"$TOOLCHAIN_BIN/aarch64-unknown-linux-ohos-clang" /tmp/test.c -o /tmp/test_ohos 2>&1 | head -5
+"$TOOLCHAIN_BIN/aarch64-unknown-linux-ohos-clang" /tmp/test.c -o /tmp/test_ohos 2>&1 | head -10
 if [ -f /tmp/test_ohos ]; then
     file /tmp/test_ohos
 fi
