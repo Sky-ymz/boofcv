@@ -6,7 +6,10 @@ set -uo pipefail
 JDK_REPO="${JDK_REPO:-https://github.com/openjdk/jdk21u.git}"
 JDK_TAG="${JDK_TAG:-jdk-21.0.2}"
 JOBS="${JOBS:-4}"
-OUTPUT_DIR="${OUTPUT_DIR:-$(pwd)/build-output}"
+# 用绝对路径! 避免 cd 改变 pwd 后找不到
+OUTPUT_DIR="${OUTPUT_DIR:-$(cd "$(dirname "$0")" && pwd)/../build-output}"
+# 改用 GITHUB_WORKSPACE 作为绝对基准
+OUTPUT_DIR="${OUTPUT_DIR:-${GITHUB_WORKSPACE}/build-output}"
 
 TOOLCHAIN_DIR="${TOOLCHAIN_DIR:-$(pwd)/toolchain}"
 CC="${CC:-$TOOLCHAIN_DIR/bin/aarch64-unknown-linux-ohos-clang}"
@@ -23,6 +26,8 @@ echo "SYSROOT:       $SYSROOT"
 echo "JDK_TAG:       $JDK_TAG"
 echo "JOBS:          $JOBS"
 echo "OUTPUT_DIR:    $OUTPUT_DIR"
+echo "GITHUB_WORKSPACE: ${GITHUB_WORKSPACE:-<not set>}"
+echo "PWD: $(pwd)"
 echo "=========================================="
 
 # 1. 验证工具链
@@ -43,6 +48,8 @@ if [ ! -d "jdk21u" ]; then
 fi
 
 cd jdk21u
+PWD_AFTER_CD=$(pwd)
+echo "--- cd jdk21u: $PWD_AFTER_CD ---"
 
 # 4. Configure
 echo "--- 配置 OpenJDK build ---"
@@ -64,8 +71,9 @@ bash configure \
     > configure.log 2>&1
 
 CONFIGURE_RC=$?
+echo "configure exit code: $CONFIGURE_RC"
 if [ $CONFIGURE_RC -ne 0 ]; then
-    echo "ERROR: configure failed, exit code: $CONFIGURE_RC"
+    echo "ERROR: configure failed"
     tail -100 configure.log
     exit 2
 fi
@@ -79,29 +87,30 @@ make images JOBS=$JOBS > build.log 2>&1
 BUILD_RC=$?
 
 echo "build exit code: $BUILD_RC"
+echo "--- 查找产物 ---"
+echo "PWD: $(pwd)"
+ls -la build/ 2>&1 | head -10
+echo "--- find images/jdk ---"
+find build -path "*/images/jdk" -type d 2>&1 | head -5
+echo "--- find java ---"
+find build -name "java" -type f 2>&1 | head -5
+
 if [ $BUILD_RC -ne 0 ]; then
     echo "ERROR: build failed"
     tail -200 build.log
     exit 3
 fi
 
-# 6. 拷贝产物
-echo "--- 拷贝产物 ---"
+# 6. 拷贝产物 - 用绝对路径
+echo "--- 拷贝产物到 $OUTPUT_DIR ---"
 mkdir -p "$OUTPUT_DIR"
-
-echo "--- 查找产物 ---"
-echo "PWD: $(pwd)"
-ls -la build/ 2>&1 | head -10
-echo "--- find images/jdk ---"
-find build -path "*/images/jdk" -type d 2>&1
-echo "--- find java ---"
-find build -name "java" -type f 2>&1 | head -5
 
 JDK_BUILD_DIR=$(find build -maxdepth 4 -path "*/images/jdk" -type d 2>/dev/null | head -1)
 if [ -z "$JDK_BUILD_DIR" ]; then
     JAVA_BIN=$(find build -name "java" -type f -executable 2>/dev/null | head -1)
     if [ -z "$JAVA_BIN" ]; then
         echo "ERROR: 找不到编译产物 java"
+        find build -name "java" 2>&1
         exit 4
     fi
     JDK_BUILD_DIR=$(dirname $(dirname "$JAVA_BIN"))
