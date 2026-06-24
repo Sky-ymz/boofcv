@@ -8,13 +8,13 @@ on:
       - '.github/workflows/build-ohos-musl-jdk.yml'
       - 'scripts/build-jdk.sh'
       - 'scripts/verify-jdk.sh'
+      - 'scripts/setup-ohos-toolchain.sh'
       - 'sysroot-ohos.tar.gz'
 
 jobs:
   build-ohos-jdk:
     runs-on: ubuntu-24.04
     timeout-minutes: 90
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -41,59 +41,21 @@ jobs:
           clang-19 --version
           ld.lld-19 --version | head -1
 
-      - name: Extract OHOS sysroot + create clang wrappers
-        # 12 MB sysroot 已在 repo 内 (sysroot-ohos.tar.gz)
-        # 用 Python heredoc 避免 YAML 解析问题
+      - name: Extract OHOS sysroot + setup toolchain
         run: |
-          echo "--- 解压 OHOS sysroot ---"
-          mkdir -p sysroot toolchain/bin
+          echo "--- 解压 OHOS sysroot (12MB) ---"
+          mkdir -p sysroot toolchain
           tar -xzf sysroot-ohos.tar.gz -C sysroot
           ls sysroot/usr/include | head -5
-          SYSROOT_DIR=$(pwd)/sysroot
 
-          # 用 python heredoc 写 wrapper (避免 YAML 解析问题)
-          python3 -c "
-import os
-sysroot = os.environ['SYSROOT_DIR']
-wrapper_c = '''#!/bin/bash
-exec /usr/bin/clang-19 \\
-    --target=aarch64-linux-ohos \\
-    --sysroot=''' + sysroot + ''' \\
-    --gcc-toolchain=''' + sysroot + ''' \\
-    -fuse-ld=/usr/bin/ld.lld-19 \\
-    -rtlib=compiler-rt \\
-    \"\$@\"
-'''
-with open('toolchain/bin/aarch64-unknown-linux-ohos-clang', 'w') as f:
-    f.write(wrapper_c)
-os.chmod('toolchain/bin/aarch64-unknown-linux-ohos-clang', 0o755)
-wrapper_cxx = '''#!/bin/bash
-exec /usr/bin/clang++-19 \\
-    --target=aarch64-linux-ohos \\
-    --sysroot=''' + sysroot + ''' \\
-    --gcc-toolchain=''' + sysroot + ''' \\
-    -fuse-ld=/usr/bin/ld.lld-19 \\
-    -stdlib=libc++ \\
-    -rtlib=compiler-rt \\
-    \"\$@\"
-'''
-with open('toolchain/bin/aarch64-unknown-linux-ohos-clang++', 'w') as f:
-    f.write(wrapper_cxx)
-os.chmod('toolchain/bin/aarch64-unknown-linux-ohos-clang++', 0o755)
-print('Wrappers created')
-"
-          export SYSROOT_DIR
           echo ""
-          echo "--- 验证 wrapper ---"
-          toolchain/bin/aarch64-unknown-linux-ohos-clang --version | head -1
-          echo 'int main() { return 0; }' > /tmp/test.c
-          toolchain/bin/aarch64-unknown-linux-ohos-clang -static /tmp/test.c -o /tmp/test_ohos 2>&1 | head -5
-          file /tmp/test_ohos 2>&1 | head -1
+          echo "--- 创建 clang wrapper ---"
+          chmod +x scripts/setup-ohos-toolchain.sh
+          bash scripts/setup-ohos-toolchain.sh "$(pwd)/sysroot" "$(pwd)/toolchain/bin"
 
-          # 写到 env
           echo "CC=$(pwd)/toolchain/bin/aarch64-unknown-linux-ohos-clang" >> $GITHUB_ENV
           echo "CXX=$(pwd)/toolchain/bin/aarch64-unknown-linux-ohos-clang++" >> $GITHUB_ENV
-          echo "SYSROOT=$SYSROOT_DIR" >> $GITHUB_ENV
+          echo "SYSROOT=$(pwd)/sysroot" >> $GITHUB_ENV
           echo "TOOLCHAIN_DIR=$(pwd)/toolchain" >> $GITHUB_ENV
 
       - name: Build OHOS musl OpenJDK 21
@@ -119,14 +81,9 @@ print('Wrappers created')
       - name: Print download info
         if: success()
         run: |
-          echo ""
           echo "=========================================="
-          echo "✅ OHOS musl OpenJDK 21 build done!"
-          echo "=========================================="
+          echo "OHOS musl OpenJDK 21 build done!"
           echo "Download: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           echo "Artifact: ohos-musl-jdk-21-${{ github.sha }}"
-          echo ""
-          echo "下一步："
-          echo "1. 下载 artifact"
-          echo "2. 推鸿蒙 PC + java -version 验证 H2b"
+          echo "Next: download, push to HarmonyOS PC, run java -version"
           echo "=========================================="
