@@ -31,7 +31,7 @@ echo ""
 echo "==== GIT CLONE ===="
 if [ ! -d "jdk21u" ]; then
     echo "Cloning jdk21u..."
-    git clone --depth 1 --branch jdk-21.0.2 https://github.com/openjdk/jdk21u.git jdk21u 2>&1 | head -10
+    git clone --depth 1 --branch jdk-21-ga https://github.com/openjdk/jdk21u.git jdk21u 2>&1 | head -10
 else
     echo "jdk21u already exists, size: $(du -sh jdk21u 2>&1 | head -1)"
 fi
