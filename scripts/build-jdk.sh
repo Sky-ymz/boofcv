@@ -8,8 +8,8 @@ CC="${CC:-$TOOLCHAIN_DIR/bin/aarch64-unknown-linux-ohos-clang}"
 CXX="${CXX:-$TOOLCHAIN_DIR/bin/aarch64-unknown-linux-ohos-clang++}"
 SYSROOT="${SYSROOT:-$(pwd)/sysroot}"
 JDK_TAG="${JDK_TAG:-jdk-21-ga}"
+JDK_VARIANT="${JDK_VARIANT:-minimal}"  # 用 minimal variant, 跳过 server 编译
 
-echo "==== CHECK TOOLS ===="
 which clang-19 || true
 which ld.lld-19 || true
 which javac || true
@@ -20,16 +20,14 @@ echo ""
 echo "==== TEST WRAPPER ===="
 "$CC" --version
 
-echo ""
-echo "==== GIT CLONE ===="
-cd "$TOOLCHAIN_DIR/.."  # cd workspace root
+cd "$TOOLCHAIN_DIR/.."
 [ ! -d jdk21u ] && git clone --depth 1 --branch "$JDK_TAG" https://github.com/openjdk/jdk21u.git jdk21u 2>&1 | head -3
 
 cd jdk21u
 chmod +x configure
 
 echo ""
-echo "==== CONFIGURE ===="
+echo "==== CONFIGURE (minimal variant) ===="
 bash configure \
     --openjdk-target=aarch64-linux-gnu \
     --with-sysroot="$SYSROOT" \
@@ -38,8 +36,10 @@ bash configure \
     --with-extra-cxxflags="-O2 -fPIC -stdlib=libc++ -Wno-error" \
     --with-extra-ldflags="-stdlib=libc++ -lm -lpthread -lc++ -lc++abi -L${SYSROOT}/usr/lib/aarch64-linux-ohos" \
     --disable-jvm-feature-shenandoahgc \
-    --with-jvm-variants=core \
+    --with-jvm-variants="$JDK_VARIANT" \
     --disable-warnings-as-errors \
+    --disable-debug-symbols \
+    --disable-hotspot-gcc \
     --with-boot-jdk="$JAVA_HOME" \
     > configure.log 2>&1
 
@@ -48,14 +48,12 @@ echo "configure exit: $CR"
 [ $CR -ne 0 ] && tail -100 configure.log && exit 0
 
 echo ""
-echo "==== BUILD ===="
+echo "==== BUILD (minimal, 10-15 min) ===="
 make images JOBS=4 > build.log 2>&1
 BR=$?
 echo "build exit: $BR"
-[ $BR -ne 0 ] && tail -100 build.log && exit 0
+[ $BR -ne 0 ] && tail -200 build.log && exit 0
 
-echo ""
-echo "==== FIND OUTPUT ===="
 OUTPUT_DIR="${OUTPUT_DIR:-${GITHUB_WORKSPACE}/build-output}"
 mkdir -p "$OUTPUT_DIR"
 JDK_BUILD_DIR=$(find build -maxdepth 4 -path "*/images/jdk" -type d 2>/dev/null | head -1)
@@ -66,14 +64,12 @@ if [ -n "$JDK_BUILD_DIR" ]; then
     ls -lh ohos-jdk-21-dynamic.tar.gz
 else
     echo "NO jdk/images found"
+    find build -name "java" 2>&1 | head -5
 fi
 
 echo ""
 echo "==== CC INVOKE LOG ===="
-[ -f /tmp/cc-invoke.log ] && cat /tmp/cc-invoke.log
-[ -f /tmp/cxx-invoke.log ] && cat /tmp/cxx-invoke.log
+[ -f /tmp/cc-invoke.log ] && tail -50 /tmp/cc-invoke.log
 echo ""
 echo "==== SCRIPT END: $(date) ===="
-
-# Always exit 0
 exit 0
